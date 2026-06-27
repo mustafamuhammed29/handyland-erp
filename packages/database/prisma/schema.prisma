@@ -1,0 +1,353 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== CUSTOMER =====
+model Customer {
+  id              String    @id @default(cuid())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Personal Data
+  firstName       String
+  lastName        String
+  phone           String    @unique
+  email           String?
+  street          String?
+  city            String?
+  postalCode      String?
+  country         String    @default("DE")
+  language        String    @default("de")
+  
+  // Loyalty
+  loyaltyTier     LoyaltyTier @default(BRONZE)
+  loyaltyPoints   Int       @default(0)
+  totalSpending   Decimal   @default(0) @db.Decimal(10,2)
+  totalRepairs    Int       @default(0)
+  
+  // GDPR
+  gdprConsent     Boolean   @default(false)
+  gdprConsentAt   DateTime?
+  gdprConsentIp   String?
+  marketingConsent Boolean  @default(false)
+  marketingConsentAt DateTime?
+  
+  // Relations
+  repairs         Repair[]
+  devices         Device[]
+  consents        ConsentRecord[]
+  notes           CustomerNote[]
+  campaigns       CampaignRecipient[]
+  
+  @@index([phone])
+  @@index([email])
+}
+
+enum LoyaltyTier {
+  BRONZE
+  SILVER
+  GOLD
+  VIP
+}
+
+// ===== DEVICE =====
+model Device {
+  id              String    @id @default(cuid())
+  createdAt       DateTime  @default(now())
+  
+  customerId      String
+  customer        Customer  @relation(fields: [customerId], references: [id])
+  
+  manufacturer    String
+  model           String
+  imei            String?
+  serialNumber    String?
+  color           String?
+  storage         String?
+  purchaseYear    Int?
+  
+  repairs         Repair[]
+}
+
+// ===== REPAIR =====
+model Repair {
+  id              String    @id @default(cuid())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Ticket Number
+  ticketNumber    String    @unique
+  ticketYear      Int
+  ticketSequence  Int
+  
+  // Relations
+  customerId      String
+  customer        Customer  @relation(fields: [customerId], references: [id])
+  deviceId        String
+  device          Device    @relation(fields: [deviceId], references: [id])
+  assignedToId    String?
+  assignedTo      Staff?    @relation(fields: [assignedToId], references: [id])
+  
+  // Security (encrypted)
+  devicePasswordEncrypted  String?
+  simPinEncrypted          String?
+  
+  // Problem
+  issues          RepairIssue[]
+  problemDescription String?
+  
+  // Device Condition
+  conditionNotes  String?
+  conditionItems  RepairConditionItem[]
+  
+  // Accessories
+  hasSimCard      Boolean   @default(false)
+  hasCase         Boolean   @default(false)
+  hasCharger      Boolean   @default(false)
+  hasMemoryCard   Boolean   @default(false)
+  accessoryNotes  String?
+  
+  // Previous Repairs
+  hadPreviousRepairs Boolean @default(false)
+  previousRepairsDesc String?
+  
+  // Status & Workflow
+  status          RepairStatus @default(NEW)
+  statusHistory   RepairStatusHistory[]
+  
+  // Pricing
+  estimatedPrice  Decimal?  @db.Decimal(10,2)
+  finalPrice      Decimal?  @db.Decimal(10,2)
+  
+  // Scheduling
+  pickupDate      DateTime?
+  
+  // Signature & Consent
+  signatureImage  String?   // Cloudinary URL
+  signatureTimestamp DateTime?
+  signatureIp     String?
+  termsAccepted   Boolean   @default(false)
+  termsVersion    String?
+  
+  // Photos
+  photos          RepairPhoto[]
+  
+  // Notes
+  notes           RepairNote[]
+  
+  // PDF
+  receiptPdfUrl   String?
+  
+  @@index([ticketNumber])
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum RepairStatus {
+  NEW
+  ACCEPTED
+  DIAGNOSING
+  WAITING_FOR_PARTS
+  IN_REPAIR
+  QUALITY_CHECK
+  READY_FOR_PICKUP
+  DELIVERED
+  CANCELLED
+}
+
+model RepairIssue {
+  id        String @id @default(cuid())
+  repairId  String
+  repair    Repair @relation(fields: [repairId], references: [id], onDelete: Cascade)
+  issueType IssueType
+}
+
+enum IssueType {
+  DISPLAY
+  BATTERY
+  CHARGING_PORT
+  SPEAKER
+  EARPIECE
+  MICROPHONE
+  CAMERA
+  WATER_DAMAGE
+  BACK_COVER
+  SOFTWARE
+  UNLOCKING
+  DATA_RECOVERY
+  OTHER
+}
+
+model RepairConditionItem {
+  id          String @id @default(cuid())
+  repairId    String
+  repair      Repair @relation(fields: [repairId], references: [id], onDelete: Cascade)
+  condition   ConditionType
+}
+
+enum ConditionType {
+  SCREEN_SCRATCHES
+  CRACKED_SCREEN
+  BENT_FRAME
+  BROKEN_CAMERA_GLASS
+  WATER_DAMAGE_VISIBLE
+  BACK_COVER_DAMAGED
+  OTHER
+}
+
+model RepairStatusHistory {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  repairId  String
+  repair    Repair   @relation(fields: [repairId], references: [id])
+  status    RepairStatus
+  staffId   String?
+  note      String?
+}
+
+model RepairPhoto {
+  id        String @id @default(cuid())
+  repairId  String
+  repair    Repair @relation(fields: [repairId], references: [id], onDelete: Cascade)
+  url       String
+  caption   String?
+  createdAt DateTime @default(now())
+}
+
+model RepairNote {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  repairId  String
+  repair    Repair   @relation(fields: [repairId], references: [id])
+  staffId   String
+  staff     Staff    @relation(fields: [staffId], references: [id])
+  note      String
+  isInternal Boolean @default(true)
+}
+
+model CustomerNote {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  staffId    String
+  staff      Staff    @relation(fields: [staffId], references: [id])
+  note       String
+}
+
+// ===== STAFF =====
+model Staff {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  name        String
+  email       String   @unique
+  password    String   // bcrypt hashed
+  role        StaffRole @default(RECEPTIONIST)
+  isActive    Boolean  @default(true)
+  lastActiveAt DateTime?
+  
+  repairs     Repair[]
+  auditLogs   AuditLog[]
+  repairNotes RepairNote[]
+  customerNotes CustomerNote[]
+}
+
+enum StaffRole {
+  OWNER
+  MANAGER
+  TECHNICIAN
+  RECEPTIONIST
+}
+
+// ===== CONSENT RECORDS =====
+model ConsentRecord {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id])
+  consentType  String
+  granted      Boolean
+  ipAddress    String?
+  userAgent    String?
+  termsVersion String?
+}
+
+// ===== TICKET NUMBER SEQUENCE =====
+model TicketSequence {
+  id    Int @id @default(autoincrement())
+  year  Int @unique
+  lastSequence Int @default(0)
+}
+
+// ===== AUDIT LOG =====
+model AuditLog {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  staffId    String
+  staff      Staff    @relation(fields: [staffId], references: [id])
+  action     String
+  entity     String
+  entityId   String
+  details    Json?
+  ipAddress  String?
+}
+
+// ===== MARKETING =====
+model Campaign {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  title       String
+  type        CampaignType
+  subject     String?
+  content     String
+  status      CampaignStatus @default(DRAFT)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  recipients  CampaignRecipient[]
+}
+
+enum CampaignType {
+  EMAIL
+  SMS
+  WHATSAPP
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  CANCELLED
+}
+
+model CampaignRecipient {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id])
+  sentAt      DateTime?
+  openedAt    DateTime?
+  clickedAt   DateTime?
+}
+
+// ===== SETTINGS =====
+model ShopSettings {
+  id              String @id @default("singleton")
+  shopName        String @default("HANDYLAND")
+  address         String?
+  phone           String?
+  email           String?
+  website         String?
+  logoUrl         String?
+  loyaltyConfig   Json?
+  termsContent    Json?
+  updatedAt       DateTime @updatedAt
+}
