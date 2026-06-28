@@ -391,8 +391,8 @@ export function PartOrdersClient({ initialOrders, customers }: {
       </div>
 
       {/* Table */}
-      <div className="border rounded-xl bg-card overflow-visible shadow-sm min-h-[350px]">
-        <div className="overflow-x-auto overflow-y-visible pb-16">
+      <div className="border rounded-xl bg-card overflow-visible shadow-sm mb-32">
+        <div className="w-full">
           <table className="w-full text-sm text-left">
             <thead className="bg-muted/40 text-muted-foreground font-medium border-b">
               <tr>
