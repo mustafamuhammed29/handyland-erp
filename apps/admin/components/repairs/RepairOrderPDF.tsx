@@ -1,178 +1,278 @@
 import React from "react";
-import { Document, Page, Text, View, StyleSheet, Image, Font } from "@react-pdf/renderer";
-import QRCode from "qrcode";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 
-// Register custom fonts (optional, using default Helvetica for simplicity/reliability in PDFs)
+const colors = {
+  black: '#000000',
+  gold: '#F5C518',
+  headerBg: '#1a1a1a',
+  headerText: '#FFFFFF',
+  border: '#cccccc',
+  lightGray: '#f5f5f5',
+};
+
 const styles = StyleSheet.create({
-  page: { padding: 40, fontFamily: "Helvetica", fontSize: 10, color: "#111" },
-  headerRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 20 },
-  logoText: { fontSize: 24, fontWeight: "bold", color: "#000" },
-  ticketBox: { backgroundColor: "#eee", padding: 8, borderRadius: 4, alignItems: "center" },
-  ticketText: { fontSize: 16, fontWeight: "bold" },
-  qrCode: { width: 60, height: 60, marginTop: 4 },
-  sectionTitle: { fontSize: 12, fontWeight: "bold", backgroundColor: "#333", color: "#fff", padding: 4, marginTop: 15, marginBottom: 10, textTransform: "uppercase" },
-  row: { flexDirection: "row", marginBottom: 6 },
-  colHalf: { width: "50%", paddingRight: 10 },
-  label: { fontSize: 8, color: "#555", textTransform: "uppercase", marginBottom: 2 },
-  value: { fontSize: 10, fontWeight: "bold", borderBottomWidth: 1, borderBottomColor: "#ccc", paddingBottom: 2 },
-  checkboxRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 4, gap: 10 },
-  checkboxItem: { flexDirection: "row", alignItems: "center", width: "30%", marginBottom: 4 },
-  checkboxBox: { width: 10, height: 10, borderWidth: 1, borderColor: "#000", marginRight: 4, justifyContent: "center", alignItems: "center" },
-  checkboxChecked: { width: 6, height: 6, backgroundColor: "#000" },
-  signatureSection: { flexDirection: "row", justifyContent: "space-between", marginTop: 40 },
-  signatureBox: { width: "45%", borderTopWidth: 1, borderTopColor: "#000", paddingTop: 5, alignItems: "center" },
-  signatureImage: { width: 120, height: 60, marginTop: -65 },
-  footer: { position: "absolute", bottom: 30, left: 40, right: 40, textAlign: "center", fontSize: 8, color: "#777", borderTopWidth: 1, borderTopColor: "#eee", paddingTop: 10 },
+  page: { padding: "40px", fontFamily: "Helvetica", fontSize: 9, color: colors.black },
+  
+  // Header Section
+  headerSection: { flexDirection: "row", justifyContent: "space-between", marginBottom: 20 },
+  logoBlock: { width: "60%" },
+  logoWrapper: { backgroundColor: colors.black, padding: "4px 8px", alignSelf: "flex-start", marginBottom: 4 },
+  logoText: { fontSize: 24, fontWeight: "bold", color: colors.gold },
+  logoSub: { fontSize: 8, letterSpacing: 1, fontWeight: "bold" },
+  ticketBlock: { width: "40%", alignItems: "flex-start", paddingLeft: 20 },
+  qrCode: { width: 50, height: 50, position: "absolute", top: 0, right: 0 },
+  ticketRow: { flexDirection: "row", marginBottom: 4 },
+  ticketLabel: { fontSize: 9, width: 40, color: "#555" },
+  ticketValue: { fontSize: 10, fontWeight: "bold" },
+  
+  // Section Headers
+  sectionHeader: {
+    backgroundColor: colors.headerBg,
+    color: colors.headerText,
+    padding: "6px 10px",
+    fontSize: 11,
+    fontWeight: "bold",
+    letterSpacing: 1,
+    marginBottom: 8,
+    marginTop: 12,
+    flexDirection: "row",
+    alignItems: "center"
+  },
+  sectionSubtitle: { fontSize: 8, color: "#aaa", marginLeft: 8, fontWeight: "normal", letterSpacing: 0, textTransform: "none" },
+  
+  // Form Rows
+  fieldRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#e0e0e0", paddingVertical: 5, paddingHorizontal: 4 },
+  colHalf: { flex: 1, flexDirection: "row" },
+  colFull: { width: "100%", flexDirection: "row" },
+  label: { fontSize: 8, color: "#555", width: "35%" },
+  value: { fontSize: 9, color: colors.black, fontWeight: "bold", width: "65%" },
+  
+  labelSmall: { fontSize: 8, color: "#555", width: "20%" },
+  valueLarge: { fontSize: 9, color: colors.black, fontWeight: "bold", width: "80%" },
+
+  // Checkboxes
+  checkboxGrid: { flexDirection: "row", flexWrap: "wrap", marginTop: 4, gap: 10 },
+  checkboxItem: { flexDirection: "row", width: "30%", marginBottom: 4 },
+
+  // Legal
+  legalText: { fontSize: 8, color: "#333", marginTop: 15, lineHeight: 1.4, textAlign: "justify" },
+
+  // Signatures
+  sigSection: { flexDirection: "row", justifyContent: "space-between", marginTop: 30 },
+  sigBox: { width: "45%", borderTopWidth: 1, borderTopColor: colors.black, paddingTop: 4, position: "relative", minHeight: 40 },
+  sigImage: { width: 120, height: 50, position: "absolute", bottom: 15, left: 10 },
+  sigText: { fontSize: 8, color: "#555" },
+
+  // Footer
+  footer: { position: "absolute", bottom: 30, left: 40, right: 40, textAlign: "center", fontSize: 8, borderTopWidth: 1, borderTopColor: "#e0e0e0", paddingTop: 6 },
 });
 
+// Using a custom checkbox instead of unicode because standard Helvetica in PDF doesn't support U+2611 reliably
+// We'll simulate the unicode look with text blocks
+const UnicodeCheckbox = ({ checked }: { checked: boolean }) => (
+  <Text style={{ fontFamily: "Helvetica", fontSize: 10 }}>{checked ? "[X]" : "[ ]"}</Text>
+);
+
 export const RepairOrderPDF = ({ repair, qrCodeDataUrl }: { repair: any, qrCodeDataUrl: string }) => {
-  const issues = repair.issues.map((i: any) => i.issueType);
-  const conditionItems = repair.conditionItems.map((c: any) => c.condition);
+  const issues = repair.issues?.map((i: any) => i.issueType) || [];
   
-  const Checkbox = ({ label, checked }: { label: string, checked: boolean }) => (
-    <View style={styles.checkboxItem}>
-      <View style={styles.checkboxBox}>{checked && <View style={styles.checkboxChecked} />}</View>
-      <Text style={{ fontSize: 9 }}>{label}</Text>
-    </View>
-  );
+  const renderValue = (val: string | null | undefined) => {
+    return val && val.trim() !== "" ? val : "—";
+  };
+
+  const isChecked = (val: boolean) => val;
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* HEADER */}
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.logoText}>HANDYLAND</Text>
-            <Text style={{ marginTop: 4, color: "#555" }}>Reparaturauftrag</Text>
-            <Text style={{ marginTop: 2, color: "#555" }}>Datum: {new Date().toLocaleDateString("de-DE")}</Text>
+        
+        {/* HEADER SECTION */}
+        <View style={styles.headerSection}>
+          <View style={styles.logoBlock}>
+            <View style={styles.logoWrapper}>
+              <Text style={styles.logoText}>HANDYLAND</Text>
+            </View>
+            <Text style={styles.logoSub}>AN- UND VERKAUF • REPARATUR • ZUBEHÖR</Text>
           </View>
-          <View style={{ alignItems: "flex-end" }}>
-            <View style={styles.ticketBox}>
-              <Text style={{ fontSize: 8, color: "#555", marginBottom: 2 }}>TICKET NUMMER</Text>
-              <Text style={styles.ticketText}>{repair.ticketNumber}</Text>
+          
+          <View style={styles.ticketBlock}>
+            <View style={styles.ticketRow}>
+              <Text style={styles.ticketLabel}>Ticket:</Text>
+              <Text style={styles.ticketValue}>{repair.ticketNumber}</Text>
+            </View>
+            <View style={styles.ticketRow}>
+              <Text style={styles.ticketLabel}>Datum:</Text>
+              <Text style={styles.ticketValue}>{new Date(repair.createdAt || Date.now()).toLocaleDateString("de-DE")}</Text>
             </View>
             {qrCodeDataUrl && <Image src={qrCodeDataUrl} style={styles.qrCode} />}
           </View>
         </View>
 
-        {/* CUSTOMER SECTION */}
-        <Text style={styles.sectionTitle}>IHRE PERSÖNLICHEN DATEN</Text>
-        <View style={styles.row}>
-          <View style={styles.colHalf}>
-            <Text style={styles.label}>Name</Text>
-            <Text style={styles.value}>{repair.customer.firstName} {repair.customer.lastName}</Text>
-          </View>
-          <View style={styles.colHalf}>
-            <Text style={styles.label}>Telefon</Text>
-            <Text style={styles.value}>{repair.customer.phone}</Text>
-          </View>
+        {/* SECTION 1 — IHRE PERSÖNLICHEN DATEN */}
+        <View style={styles.sectionHeader}>
+          <Text>IHRE PERSÖNLICHEN DATEN</Text>
         </View>
-        <View style={styles.row}>
-          <View style={styles.colHalf}>
-            <Text style={styles.label}>E-Mail</Text>
-            <Text style={styles.value}>{repair.customer.email || "-"}</Text>
-          </View>
-        </View>
-
-        {/* DEVICE SECTION */}
-        <Text style={styles.sectionTitle}>IHRE GERÄTEDATEN</Text>
-        <View style={styles.row}>
-          <View style={styles.colHalf}>
-            <Text style={styles.label}>Gerät (Hersteller / Modell)</Text>
-            <Text style={styles.value}>{repair.device.manufacturer} {repair.device.model}</Text>
-          </View>
-          <View style={styles.colHalf}>
-            <Text style={styles.label}>IMEI / Seriennummer</Text>
-            <Text style={styles.value}>{repair.device.imei || "-"}</Text>
-          </View>
-        </View>
-        <View style={styles.row}>
-          <View style={styles.colHalf}>
-            <Text style={styles.label}>Handypasswort</Text>
-            <Text style={styles.value}>{repair.devicePasswordEncrypted || "Keins"}</Text>
-          </View>
-          <View style={styles.colHalf}>
-            <Text style={styles.label}>SIM-PIN</Text>
-            <Text style={styles.value}>{repair.simPinEncrypted || "Keins"}</Text>
-          </View>
-        </View>
-        <View style={styles.row}>
-          <View style={styles.colHalf}>
-            <Text style={styles.label}>Zubehör abgegeben</Text>
-            <Text style={styles.value}>
-              SIM: {repair.hasSimCard ? "Ja" : "Nein"} | Hülle: {repair.hasCase ? "Ja" : "Nein"}
-            </Text>
-          </View>
-          <View style={styles.colHalf}>
-            <Text style={styles.label}>Schon mal repariert?</Text>
-            <Text style={styles.value}>{repair.hadPreviousRepairs ? "Ja" : "Nein"}</Text>
-          </View>
-        </View>
-
-        {/* ADMIN SECTION */}
-        <Text style={styles.sectionTitle}>AUFNAHMEPROTOKOLL (Vom Mitarbeiter auszufüllen)</Text>
         
-        <View style={{ marginBottom: 10 }}>
-          <Text style={styles.label}>Bestehende optische Mängel</Text>
-          <Text style={styles.value}>{repair.conditionNotes || "Keine"}</Text>
+        <View style={styles.fieldRow}>
+          <View style={styles.colHalf}>
+            <Text style={styles.label}>Vorname, Nachname:</Text>
+            <Text style={styles.value}>{renderValue(`${repair.customer?.firstName || ""} ${repair.customer?.lastName || ""}`)}</Text>
+          </View>
+          <View style={styles.colHalf}>
+            <Text style={styles.label}>Telefon:</Text>
+            <Text style={styles.value}>{renderValue(repair.customer?.phone)}</Text>
+          </View>
         </View>
-
-        <View style={{ marginBottom: 10 }}>
-          <Text style={styles.label}>Defekt, Fehler oder Problem</Text>
-          <View style={styles.checkboxRow}>
-            <Checkbox label="Display" checked={issues.includes("DISPLAY")} />
-            <Checkbox label="Akku" checked={issues.includes("BATTERY")} />
-            <Checkbox label="Ladebuchse" checked={issues.includes("CHARGING_PORT")} />
-            <Checkbox label="Lautsprecher" checked={issues.includes("SPEAKER")} />
-            <Checkbox label="Ohrmuschel" checked={issues.includes("EARPIECE")} />
-            <Checkbox label="Mikrofon" checked={issues.includes("MICROPHONE")} />
-            <Checkbox label="Kamera" checked={issues.includes("CAMERA")} />
-            <Checkbox label="Wasserschaden" checked={issues.includes("WATER_DAMAGE")} />
-            <Checkbox label="Back Cover" checked={issues.includes("BACK_COVER")} />
-            <Checkbox label="Software" checked={issues.includes("SOFTWARE")} />
-            <Checkbox label="Sonstiges" checked={issues.includes("OTHER")} />
+        
+        <View style={styles.fieldRow}>
+          <View style={styles.colFull}>
+            <Text style={styles.labelSmall}>E-Mail:</Text>
+            <Text style={styles.valueLarge}>{renderValue(repair.customer?.email)}</Text>
           </View>
         </View>
 
-        <View style={styles.row}>
+        {/* SECTION 2 — IHRE GERÄTEDATEN */}
+        <View style={styles.sectionHeader}>
+          <Text>IHRE GERÄTEDATEN</Text>
+        </View>
+
+        <View style={styles.fieldRow}>
           <View style={styles.colHalf}>
-            <Text style={styles.label}>Zeitaufwand für Ihre Reparatur</Text>
-            <Text style={styles.value}>{repair.repairTimeEstimate || "-"}</Text>
+            <Text style={styles.label}>Hersteller, Modell:</Text>
+            <Text style={styles.value}>{renderValue(`${repair.device?.manufacturer || ""} ${repair.device?.model || ""}`)}</Text>
           </View>
           <View style={styles.colHalf}>
-            <Text style={styles.label}>Abholtermin</Text>
+            <Text style={styles.label}>IMEI/SN:</Text>
+            <Text style={styles.value}>{renderValue(repair.device?.imei)}</Text>
+          </View>
+        </View>
+
+        <View style={styles.fieldRow}>
+          <View style={styles.colHalf}>
+            <Text style={styles.label}>Handypasswort:</Text>
+            <Text style={styles.value}>{repair.devicePasswordEncrypted || repair.devicePatternEncrypted ? "••••••" : "—"}</Text>
+          </View>
+          <View style={styles.colHalf}>
+            <Text style={styles.label}>SIM-Pin:</Text>
+            <Text style={styles.value}>{repair.simPinEncrypted ? "••••••" : "—"}</Text>
+          </View>
+        </View>
+
+        <View style={styles.fieldRow}>
+          <View style={styles.colHalf}>
+            <Text style={styles.label}>SIM Karte:</Text>
             <Text style={styles.value}>
-              {repair.pickupDate ? new Date(repair.pickupDate).toLocaleString("de-DE") : "Noch nicht vereinbart"}
+              <UnicodeCheckbox checked={isChecked(repair.hasSimCard)} /> Ja   <UnicodeCheckbox checked={!isChecked(repair.hasSimCard)} /> Nein
+            </Text>
+          </View>
+          <View style={styles.colHalf}>
+            <Text style={styles.label}>Hülle:</Text>
+            <Text style={styles.value}>
+              <UnicodeCheckbox checked={isChecked(repair.hasCase)} /> Ja   <UnicodeCheckbox checked={!isChecked(repair.hasCase)} /> Nein
             </Text>
           </View>
         </View>
 
-        <View style={styles.row}>
+        {/* SECTION 3 — AUFNAHMEPROTOKOLL */}
+        <View style={styles.sectionHeader}>
+          <Text>AUFNAHMEPROTOKOLL</Text>
+          <Text style={styles.sectionSubtitle}>(Vom Serviceberater ausgefüllt)</Text>
+        </View>
+
+        <View style={styles.fieldRow}>
+          <View style={styles.colFull}>
+            <Text style={styles.labelSmall}>Wurde das Gerät bereits repariert?</Text>
+            <Text style={styles.valueLarge}>
+              <UnicodeCheckbox checked={!isChecked(repair.hadPreviousRepairs)} /> Nein   <UnicodeCheckbox checked={isChecked(repair.hadPreviousRepairs)} /> Ja → {renderValue(repair.previousRepairsDesc)}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.fieldRow}>
+          <View style={styles.colFull}>
+            <Text style={styles.labelSmall}>Bestehende optische Mängel:</Text>
+            <Text style={styles.valueLarge}>{renderValue(repair.conditionNotes)}</Text>
+          </View>
+        </View>
+
+        <View style={{ ...styles.fieldRow, borderBottomWidth: 0, paddingBottom: 0 }}>
+          <Text style={styles.labelSmall}>Defekt, Fehler oder Problem:</Text>
+        </View>
+        <View style={{ ...styles.fieldRow, paddingTop: 0 }}>
+          <View style={styles.colFull}>
+            <View style={styles.checkboxGrid}>
+              <View style={styles.checkboxItem}><Text><UnicodeCheckbox checked={issues.includes("DISPLAY")} /> Display</Text></View>
+              <View style={styles.checkboxItem}><Text><UnicodeCheckbox checked={issues.includes("SPEAKER")} /> Lautsprecher</Text></View>
+              <View style={styles.checkboxItem}><Text><UnicodeCheckbox checked={issues.includes("EARPIECE")} /> Ohrmuschel</Text></View>
+              <View style={styles.checkboxItem}><Text><UnicodeCheckbox checked={issues.includes("MICROPHONE")} /> Mikrofon</Text></View>
+              <View style={styles.checkboxItem}><Text><UnicodeCheckbox checked={issues.includes("BACK_COVER")} /> Back Cover</Text></View>
+              <View style={styles.checkboxItem}><Text><UnicodeCheckbox checked={issues.includes("BATTERY")} /> Akku</Text></View>
+              <View style={styles.checkboxItem}><Text><UnicodeCheckbox checked={issues.includes("CHARGING_PORT")} /> Ladebuchse</Text></View>
+              <View style={styles.checkboxItem}><Text><UnicodeCheckbox checked={issues.includes("WATER_DAMAGE")} /> Wasserschaden</Text></View>
+              <View style={{ flexDirection: "row", width: "100%", marginTop: 4 }}>
+                <Text><UnicodeCheckbox checked={issues.includes("OTHER")} /> Sonstiges: {renderValue(repair.otherIssuesDesc)}</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.fieldRow}>
+          <View style={styles.colFull}>
+            <Text style={styles.labelSmall}>Zeitaufwand:</Text>
+            <Text style={{ ...styles.valueLarge, fontSize: 9 }}>
+              <UnicodeCheckbox checked={repair.repairTimeEstimate === "30 min"} /> 30min  
+              <UnicodeCheckbox checked={repair.repairTimeEstimate === "45 min"} /> 45min  
+              <UnicodeCheckbox checked={repair.repairTimeEstimate === "1 h"} /> 1h  
+              <UnicodeCheckbox checked={repair.repairTimeEstimate === "1,5 h"} /> 1,5h  
+              <UnicodeCheckbox checked={repair.repairTimeEstimate === "2 h"} /> 2h  
+              <UnicodeCheckbox checked={repair.repairTimeEstimate === "2,5 h"} /> 2,5h  
+              <UnicodeCheckbox checked={repair.repairTimeEstimate === "3 h"} /> 3h  
+              <UnicodeCheckbox checked={repair.repairTimeEstimate === "4 h"} /> 4h
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.fieldRow}>
           <View style={styles.colHalf}>
-            <Text style={styles.label}>Preis (inklusive MwSt)</Text>
-            <Text style={styles.value}>{repair.estimatedPrice ? `€ ${repair.estimatedPrice}` : "Nach Absprache"}</Text>
+            <Text style={styles.label}>Abholtermin:</Text>
+            <Text style={styles.value}>{repair.pickupDate ? new Date(repair.pickupDate).toLocaleString("de-DE") : "—"}</Text>
+          </View>
+          <View style={styles.colHalf}>
+            <Text style={styles.label}>Preis (inkl. MwSt.):</Text>
+            <Text style={styles.value}>{repair.estimatedPrice ? `€ ${repair.estimatedPrice}` : "—"}</Text>
           </View>
         </View>
 
-        {/* SIGNATURES */}
-        <View style={styles.signatureSection}>
-          <View style={styles.signatureBox}>
-            {repair.signatureImage && (
-              <Image src={repair.signatureImage} style={styles.signatureImage} />
-            )}
-            <Text style={{ fontSize: 9 }}>Unterschrift des Kunden</Text>
+        {/* SECTION 4 — LEGAL TEXT */}
+        <View style={styles.legalText}>
+          <Text style={{ marginBottom: 4 }}>Hiermit beauftrage ich den HANDYLAND Service um alle Arbeiten gemäß obigen Informationen am Gerät durchzuführen. Das Gerät hat keine Beschädigungen außer der oben angegebenen. Ich bin mir bewusst, dass gespeicherte Daten, Programme und Lizenzen im Rahmen der Reparatur verloren gehen können und mache den HANDYLAND Service nicht für Datenverlust haftbar. Aller Angaben erfolgen ohne Gewähr. Alle Rechte vorbehalten.</Text>
+          <Text style={{ marginBottom: 4 }}>Wir weisen darauf hin, dass trotz größter Sorgfalt, gespeicherte Daten auf Ihrem Gerät verloren gehen können. Sorgen Sie bitte dafür, dass Ihre Daten gesichert sind und Teile kaputt gehen können.</Text>
+          <Text style={{ marginBottom: 4 }}>HANDYLAND haftet NICHT für andere Teile im/am Gerät, die durch Tausch/Reparatur kaputt gehen können. Wir haften NUR auf die von uns getauschten und/oder bei uns gekauften Teile. Keine Haftung bei Software- oder Datenproblem.</Text>
+          <Text>Wenn das Gerät nicht innerhalb von 10 Werktagen ab dem vorher vereinbarten Abholtermin abgeholt wird, so fällt bei der Abholung eine Aufwandspauschale von 10€ an.</Text>
+        </View>
+
+        {/* SECTION 5 — SIGNATURES */}
+        <View style={styles.sigSection}>
+          <View style={{ ...styles.sigBox, width: "25%", borderTopWidth: 0 }}>
+            <Text style={{ ...styles.sigText, textAlign: "left", marginBottom: 2 }}>Datum:</Text>
+            <Text style={{ fontSize: 9, fontWeight: "bold" }}>{new Date(repair.createdAt || Date.now()).toLocaleDateString("de-DE")}</Text>
           </View>
-          <View style={styles.signatureBox}>
-            {repair.adminSignatureImage && (
-              <Image src={repair.adminSignatureImage} style={styles.signatureImage} />
-            )}
-            <Text style={{ fontSize: 9 }}>Unterschrift des Serviceberaters</Text>
+          <View style={styles.sigBox}>
+            {repair.signatureImage && <Image src={repair.signatureImage} style={styles.sigImage} />}
+            <Text style={styles.sigText}>Unterschrift des Kunden</Text>
+          </View>
+          <View style={styles.sigBox}>
+            {repair.adminSignatureImage && <Image src={repair.adminSignatureImage} style={styles.sigImage} />}
+            <Text style={styles.sigText}>Unterschrift des Serviceberaters</Text>
           </View>
         </View>
 
+        {/* FOOTER */}
         <Text style={styles.footer}>
-          HANDYLAND | Es gelten unsere Allgemeinen Geschäftsbedingungen. | www.handyland.de
+          WIR HOFFEN, IHR GERÄT IST BALD WIEDER EINSATZBEREIT! DANKE FÜR IHR VERTRAUEN.{"\n"}
+          HANDYLAND — Bahnhofstraße 1 — 12345 Musterstadt — Tel: 01234/56789 — www.handyland.de
         </Text>
+        
       </Page>
     </Document>
   );
