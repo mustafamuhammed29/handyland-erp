@@ -5,17 +5,17 @@ export function PatternDisplay({ pattern }: { pattern: string }) {
   const path = pattern.split(",").map(Number);
   if (path.length === 0) return null;
 
-  const size = 60; // Small size for dashboard display
+  const size = 90; // Slightly larger to fit numbers
   const points = [
-    { id: 0, x: 10, y: 10 },
-    { id: 1, x: 30, y: 10 },
-    { id: 2, x: 50, y: 10 },
-    { id: 3, x: 10, y: 30 },
-    { id: 4, x: 30, y: 30 },
-    { id: 5, x: 50, y: 30 },
-    { id: 6, x: 10, y: 50 },
-    { id: 7, x: 30, y: 50 },
-    { id: 8, x: 50, y: 50 },
+    { id: 0, x: 15, y: 15 },
+    { id: 1, x: 45, y: 15 },
+    { id: 2, x: 75, y: 15 },
+    { id: 3, x: 15, y: 45 },
+    { id: 4, x: 45, y: 45 },
+    { id: 5, x: 75, y: 45 },
+    { id: 6, x: 15, y: 75 },
+    { id: 7, x: 45, y: 75 },
+    { id: 8, x: 75, y: 75 },
   ];
 
   return (
@@ -23,7 +23,7 @@ export function PatternDisplay({ pattern }: { pattern: string }) {
       <svg 
         width={size} 
         height={size} 
-        viewBox="0 0 60 60" 
+        viewBox="0 0 90 90" 
         className="bg-muted rounded border"
       >
         {/* Draw path lines */}
@@ -43,15 +43,31 @@ export function PatternDisplay({ pattern }: { pattern: string }) {
         />
         {/* Draw points */}
         {points.map((point) => {
-          const isSelected = path.includes(point.id);
+          const pathIndex = path.indexOf(point.id);
+          const isSelected = pathIndex !== -1;
           return (
-            <circle
-              key={point.id}
-              cx={point.x}
-              cy={point.y}
-              r={isSelected ? 3 : 2}
-              fill={isSelected ? "var(--color-primary, #eab308)" : "rgba(150,150,150,0.5)"}
-            />
+            <g key={point.id}>
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r={isSelected ? 7 : 3}
+                fill={isSelected ? "var(--color-primary, #eab308)" : "rgba(150,150,150,0.5)"}
+              />
+              {isSelected && (
+                <text
+                  x={point.x}
+                  y={point.y}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fill="black"
+                  fontSize="9"
+                  fontWeight="bold"
+                  className="pointer-events-none select-none font-sans"
+                >
+                  {pathIndex + 1}
+                </text>
+              )}
+            </g>
           );
         })}
       </svg>
