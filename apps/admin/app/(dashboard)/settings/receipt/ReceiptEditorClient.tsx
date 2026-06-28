@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { saveReceiptTemplate } from "../../../actions/settings";
 import { Save, RefreshCw, CheckCircle2, ZoomIn, ZoomOut, Eye, Settings2 } from "lucide-react";
-import { ReceiptConfig, DEFAULT_RECEIPT_CONFIG, ReceiptPrintLayout } from "../../../components/repairs/ReceiptPrintLayout";
+import { ReceiptPrintLayout, ReceiptConfig, DEFAULT_RECEIPT_CONFIG } from "../../../../components/repairs/ReceiptPrintLayout";
 
 // Dummy Data
 const DUMMY_REPAIR = {
@@ -57,7 +57,7 @@ export default function ReceiptEditorClient({ initialConfigString }: { initialCo
   };
 
   const handleChange = (field: keyof ReceiptConfig, value: string) => {
-    setConfig(prev => ({ ...prev, [field]: value }));
+    setConfig((prev: ReceiptConfig) => ({ ...prev, [field]: value }));
   };
 
   const Field = ({ label, field, multiline = false }: { label: string, field: keyof ReceiptConfig, multiline?: boolean }) => (
@@ -265,7 +265,7 @@ export default function ReceiptEditorClient({ initialConfigString }: { initialCo
               transform: `scale(${scale})`, 
               width: '210mm', 
               minHeight: '297mm',
-              marginBottom: \`\${(scale - 1) * 297}mm\`
+              marginBottom: `${(scale - 1) * 297}mm`
             }}
           >
             <ReceiptPrintLayout repair={DUMMY_REPAIR} config={config} />
