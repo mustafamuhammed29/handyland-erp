@@ -191,7 +191,7 @@ export function ReceiptPrintLayout({ repair, config }: { repair: any; config: Re
   return (
     <div className="print-container bg-white w-full max-w-[800px] shadow-2xl relative overflow-hidden text-gray-900 mx-auto font-sans" style={{ minHeight: "297mm", maxHeight: "297mm" }}>
       {/* Header */}
-      <header className="bg-[#1a1a1a] text-white p-6 md:px-10 relative flex justify-between items-center overflow-hidden h-[130px]">
+      <header className="bg-[#1a1a1a] text-white p-5 md:px-8 relative flex justify-between items-center overflow-hidden h-[110px]">
         {/* Simulated starry background effect */}
         <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(#fbbf24 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
         
@@ -220,7 +220,7 @@ export function ReceiptPrintLayout({ repair, config }: { repair: any; config: Re
         </div>
       </header>
 
-      <main className="p-6 md:px-10 space-y-4">
+      <main className="p-5 md:px-8 space-y-3">
         {/* Section 1: Personal Data */}
         <section>
           <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-2">
@@ -243,19 +243,18 @@ export function ReceiptPrintLayout({ repair, config }: { repair: any; config: Re
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row sm:items-start pt-1">
-              <label className="w-48 text-sm font-medium text-gray-700 pt-2">{c.lblPassword}</label>
+              <label className="w-48 text-sm font-medium text-gray-700 pt-1">{c.lblPassword}</label>
               <div className="flex-1 flex gap-4 items-start">
-                <div className="border border-gray-600 bg-transparent px-2 min-h-[38px] w-1/2 text-gray-500 relative flex items-center font-bold pt-4">
-                  <span className="absolute left-2 top-1 text-[8px] text-gray-400 font-normal">{c.lblPasswordSub}</span>
+                <div className="border border-gray-600 bg-transparent px-2 min-h-[32px] w-1/2 text-gray-500 relative flex items-center font-bold pt-3">
+                  <span className="absolute left-2 top-0.5 text-[8px] text-gray-400 font-normal">{c.lblPasswordSub}</span>
                   <div className="text-black leading-tight">{renderValue(repair?.devicePasswordEncrypted)}</div>
                 </div>
-                <div className="border border-gray-600 bg-transparent px-2 min-h-[38px] w-1/3 text-gray-500 relative flex items-center font-bold pt-4">
-                  <span className="absolute left-2 top-1 text-[8px] text-gray-400 font-normal">{c.lblSimPin}</span>
+                <div className="border border-gray-600 bg-transparent px-2 min-h-[32px] w-1/3 text-gray-500 relative flex items-center font-bold pt-3">
+                  <span className="absolute left-2 top-0.5 text-[8px] text-gray-400 font-normal">{c.lblSimPin}</span>
                   <div className="text-black leading-tight">{renderValue(repair?.simPinEncrypted)}</div>
                 </div>
                 
-                <div className="border border-gray-600 bg-white relative overflow-hidden flex items-center justify-center" style={{ width: '70px', height: '70px', minWidth: '70px' }}>
+                <div className="border border-gray-600 bg-white relative overflow-hidden flex items-center justify-center" style={{ width: '60px', height: '60px', minWidth: '60px' }}>
                   {generatePatternSvg(repair?.devicePatternEncrypted)}
                 </div>
               </div>
@@ -302,7 +301,7 @@ export function ReceiptPrintLayout({ repair, config }: { repair: any; config: Re
         <hr className="border-gray-300" />
 
         {/* Section 3: Protocol */}
-        <section className="bg-gray-50 -mx-6 px-6 py-4 md:-mx-10 md:px-10 border-y border-gray-200">
+        <section className="bg-gray-50 -mx-5 px-5 py-3 md:-mx-8 md:px-8 border-y border-gray-200">
           <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-2">
             <h2 className="text-lg font-bold uppercase tracking-wide m-0">{c.sec3Title}</h2>
             <span className="text-xs text-gray-600">{c.sec3Sub}</span>
@@ -322,11 +321,11 @@ export function ReceiptPrintLayout({ repair, config }: { repair: any; config: Re
               <div className="border-b border-gray-600 flex-1 min-h-[24px] text-blue-800 italic font-medium px-1 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{getConditionNotes()}</div>
             </div>
 
-            <hr className="border-gray-300 my-4" />
+            <hr className="border-gray-300 my-3" />
 
-            <div className="flex flex-col md:flex-row gap-4 py-2">
+            <div className="flex flex-col md:flex-row gap-3 py-1">
               <div className="w-48 font-medium text-gray-700">{c.lblDefects.split('\\n').map((line, i) => <React.Fragment key={i}>{line}<br/></React.Fragment>)}</div>
-              <div className="flex-1 space-y-3">
+              <div className="flex-1 space-y-2">
                 <div className="flex flex-wrap gap-4">
                   <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={hasIssue('SPEAKER')} className="w-4 h-4 border-gray-500 rounded-none accent-black" readOnly /> {c.defSpeaker}</label>
                   <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={hasIssue('EARPIECE')} className="w-4 h-4 border-gray-500 rounded-none accent-black" readOnly /> {c.defEarpiece}</label>
@@ -369,15 +368,15 @@ export function ReceiptPrintLayout({ repair, config }: { repair: any; config: Re
               </div>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4 mt-4">
+            <div className="flex flex-col md:flex-row gap-4 mt-3">
               <div className="w-48 font-medium text-gray-700">{c.lblAdminSignature.split('\\n').map((line, i) => <React.Fragment key={i}>{line}<br/></React.Fragment>)}</div>
               <div className="flex-1 flex gap-4">
-                <div className="flex-1 border border-gray-600 h-16 bg-white relative overflow-hidden flex items-center justify-center">
+                <div className="flex-1 border border-gray-600 h-12 bg-white relative overflow-hidden flex items-center justify-center">
                   {repair?.adminSignatureImage ? (
                     <img src={repair.adminSignatureImage} alt="Mitarbeiterunterschrift" style={{ height: '100%', objectFit: 'contain', filter: 'invert(1)' }} />
                   ) : null}
                 </div>
-                <div className="w-32 border border-gray-600 h-16 bg-white p-1 flex flex-col justify-end relative shrink-0">
+                <div className="w-32 border border-gray-600 h-12 bg-white p-1 flex flex-col justify-end relative shrink-0">
                   <span className="absolute left-1 top-1 text-[10px] text-gray-500">{c.lblPrice}</span>
                   <div className="w-full text-right outline-none font-bold text-lg bg-transparent">{repair?.estimatedPrice ? `€ ${repair.estimatedPrice}` : ""}</div>
                 </div>
@@ -410,7 +409,7 @@ export function ReceiptPrintLayout({ repair, config }: { repair: any; config: Re
                 {c.txtCustSig2}<strong>{c.txtCustSigBold2}</strong>
               </span>
             </label>
-            <div className="border border-gray-600 h-16 bg-white w-full relative overflow-hidden flex items-center justify-center">
+            <div className="border border-gray-600 h-12 bg-white w-full relative overflow-hidden flex items-center justify-center">
               {repair?.signatureImage ? (
                 <img src={repair.signatureImage} alt="Kundenunterschrift" style={{ height: '100%', objectFit: 'contain', filter: 'invert(1)' }} />
               ) : null}

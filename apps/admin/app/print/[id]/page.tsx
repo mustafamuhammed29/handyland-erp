@@ -41,6 +41,7 @@ export default async function PrintTicketPage({ params }: { params: Promise<{ id
         @media print {
           @page { margin: 0; size: A4; }
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .no-print { display: none !important; }
         }
       `}} />
       <div className="bg-gray-100 min-h-screen py-10 print:bg-white print:py-0">
