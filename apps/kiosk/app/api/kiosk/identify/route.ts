@@ -9,11 +9,19 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
   }
 
-  const phone = normalizePhone(rawPhone);
+  const normalized = normalizePhone(rawPhone);
+  const stripped = rawPhone.replace(/[\s\-\(\)]/g, '');
+  const alternate = normalized.startsWith('+49') ? '0' + normalized.slice(3) : normalized;
 
   try {
-    const customer = await prisma.customer.findUnique({
-      where: { phone },
+    const customer = await prisma.customer.findFirst({
+      where: {
+        OR: [
+          { phone: normalized },
+          { phone: stripped },
+          { phone: alternate }
+        ]
+      },
       select: {
         id: true,
         firstName: true,

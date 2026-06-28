@@ -80,11 +80,11 @@ export default function SignatureStep() {
               onEnd={handleEnd}
               penColor="#ffffff"
               canvasProps={{
-                width: 600,
-                height: 256,
-                className: "w-full h-64 cursor-crosshair"
+                className: "w-full h-64 cursor-crosshair",
+                style: { touchAction: 'none' }
               }}
               backgroundColor="transparent"
+              clearOnResize={false}
             />
           </div>
         </motion.div>
