@@ -3,6 +3,7 @@ import { format } from "date-fns";
 
 export interface ReceiptConfig {
   // Branding
+  logoUrl?: string;
   shopNameMain: string;
   shopNameSub: string;
   headerSubtitle: string;
@@ -76,6 +77,7 @@ export interface ReceiptConfig {
 }
 
 export const DEFAULT_RECEIPT_CONFIG: ReceiptConfig = {
+  logoUrl: "",
   shopNameMain: "HANDY",
   shopNameSub: "LAND",
   headerSubtitle: "An- und Verkauf • Reparatur • Zubehör",
@@ -202,15 +204,19 @@ export function ReceiptPrintLayout({ repair, config }: { repair: any; config: Re
           </p>
         </div>
         
-        {/* Globe / Phone Icon */}
-        <div className="relative z-10 w-20 h-20 bg-white rounded-full flex items-center justify-center p-2 border-2 border-gray-300 shrink-0 ml-4">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-12 h-12 text-gray-800">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 009-9H3a9 9 0 009 9z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3a9 9 0 019 9H3a9 9 0 019-9z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c-2.3 0-4.3 3.6-4.9 8.2h9.8C16.3 6.6 14.3 3 12 3z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 21c-2.3 0-4.3-3.6-4.9-8.2h9.8c-.6 4.6-2.6 8.2-4.9 8.2z" />
-            <rect x="9" y="5" width="6" height="14" rx="1" fill="#1a1a1a" stroke="#fbbf24" strokeWidth="1.5" />
-          </svg>
+        {/* Logo / Icon */}
+        <div className="relative z-10 w-20 h-20 bg-white rounded-full flex items-center justify-center p-2 border-2 border-gray-300 shrink-0 ml-4 overflow-hidden">
+          {c.logoUrl ? (
+            <img src={c.logoUrl} alt="Logo" className="w-full h-full object-contain rounded-full" />
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-12 h-12 text-gray-800">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 009-9H3a9 9 0 009 9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 3a9 9 0 019 9H3a9 9 0 019-9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c-2.3 0-4.3 3.6-4.9 8.2h9.8C16.3 6.6 14.3 3 12 3z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 21c-2.3 0-4.3-3.6-4.9-8.2h9.8c-.6 4.6-2.6 8.2-4.9 8.2z" />
+              <rect x="9" y="5" width="6" height="14" rx="1" fill="#1a1a1a" stroke="#fbbf24" strokeWidth="1.5" />
+            </svg>
+          )}
         </div>
       </header>
 

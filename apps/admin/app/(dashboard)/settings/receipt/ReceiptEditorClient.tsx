@@ -114,6 +114,7 @@ export default function ReceiptEditorClient({ initialConfigString }: { initialCo
           
           <div className="space-y-4">
             <h3 className="text-sm font-bold border-b pb-2 text-primary">Kopfzeile (Header)</h3>
+            <Field label="Logo URL (leer für Standard-Icon)" field="logoUrl" />
             <div className="grid grid-cols-2 gap-2">
               <Field label="Shop Name (Teil 1)" field="shopNameMain" />
               <Field label="Shop Name (Teil 2)" field="shopNameSub" />
