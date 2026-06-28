@@ -1,6 +1,5 @@
 import { getShopSettings } from "../../../actions/settings";
 import ReceiptEditorClient from "./ReceiptEditorClient";
-import { DEFAULT_RECEIPT_HTML, DEFAULT_RECEIPT_CSS } from "./defaultTemplates";
 import { FileText, Printer } from "lucide-react";
 
 export default async function ReceiptEditorPage() {
@@ -30,12 +29,7 @@ export default async function ReceiptEditorPage() {
         </div>
       </div>
 
-      <ReceiptEditorClient
-        initialHtml={settings.receiptTemplateHtml}
-        initialCss={settings.receiptTemplateCss}
-        defaultHtml={DEFAULT_RECEIPT_HTML}
-        defaultCss={DEFAULT_RECEIPT_CSS}
-      />
+      <ReceiptEditorClient initialConfigString={settings.receiptTemplateHtml} />
     </div>
   );
 }
