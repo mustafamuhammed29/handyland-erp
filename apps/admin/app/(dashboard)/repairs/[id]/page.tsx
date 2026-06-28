@@ -8,6 +8,8 @@ import StatusSelect from "./StatusSelect";
 import PriceEditor from "./PriceEditor";
 import { PrintButton } from "../../../../components/repairs/PrintButton";
 
+import { PatternDisplay } from "../../../../components/repairs/PatternDisplay";
+
 export default async function RepairDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -128,7 +130,15 @@ export default async function RepairDetailPage({ params }: { params: Promise<{ i
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <span className="text-muted-foreground block text-xs">Geräte-Passwort</span>
-                    <span className="font-medium font-mono bg-muted px-2 py-0.5 rounded">{repair.devicePasswordEncrypted || "Keins"}</span>
+                    {repair.devicePatternEncrypted ? (
+                      <div className="mt-1">
+                        <PatternDisplay pattern={repair.devicePatternEncrypted} />
+                      </div>
+                    ) : (
+                      <span className="font-medium font-mono bg-muted px-2 py-0.5 rounded">
+                        {repair.devicePasswordEncrypted || "Keins"}
+                      </span>
+                    )}
                   </div>
                   <div>
                     <span className="text-muted-foreground block text-xs">SIM-PIN</span>
