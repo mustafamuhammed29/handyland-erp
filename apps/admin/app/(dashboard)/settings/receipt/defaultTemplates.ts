@@ -1,331 +1,291 @@
 export const DEFAULT_RECEIPT_CSS = `
 body {
-  background-color: #52525b;
-  font-family: 'Inter', sans-serif;
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6; /* light gray background */
 }
-.a4-page {
-  width: 210mm;
-  min-height: 297mm;
-  background: white;
-  margin: 20px auto;
-  position: relative;
-  box-shadow: 0 0 20px rgba(0,0,0,0.5);
-  overflow: hidden;
-}
+
+/* Print styles to ensure it looks exactly like a paper form when printed */
 @media print {
-  @page {
-    size: A4;
-    margin: 0;
-  }
-  body {
-    margin: 0;
-    padding: 0;
-    background: white !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-  .a4-page {
-    margin: 0;
-    box-shadow: none;
-  }
-  .no-print {
-    display: none !important;
-  }
+    body {
+        background-color: white !important;
+        padding: 0;
+        margin: 0;
+    }
+    .no-print {
+        display: none !important;
+    }
+    .print-container {
+        box-shadow: none !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        border: none !important;
+    }
+    /* Force background colors to print */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
 }
-/* Left dark starry border */
-.left-border {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 25mm;
-  background-color: #1a1a1a;
-  background-image: radial-gradient(circle at 50% 50%, #d4af37 1px, transparent 1px), radial-gradient(circle at 20% 80%, #d4af37 1px, transparent 1px), radial-gradient(circle at 80% 20%, #d4af37 1px, transparent 1px);
-  background-size: 50px 50px, 30px 30px, 40px 40px;
-  z-index: 1;
+
+/* Custom styles for inputs to look like the printed boxes */
+.form-input {
+    border: 1px solid #4b5563;
+    background-color: transparent;
+    padding: 0.25rem 0.5rem;
+    width: 100%;
+    outline: none;
+    min-height: 32px;
 }
-/* Top dark header */
-.top-header {
-  position: relative;
-  background-color: #1a1a1a;
-  color: white;
-  padding: 15mm 15mm 10mm 30mm;
-  z-index: 2;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.form-input:focus {
+    border-color: #000;
+    background-color: #f9fafb;
 }
-.content-area {
-  padding: 10mm 15mm 10mm 30mm;
-  position: relative;
-  z-index: 2;
-}
-.footer-bar {
-  background-color: #1a1a1a;
-  color: white;
-  text-align: center;
-  padding: 5mm;
-  font-size: 10px;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 2;
-  padding-left: 25mm;
-}
-.box-input {
-  border: 1px solid #000;
-  padding: 4px 8px;
-  background: #fcfcfc;
-  min-height: 28px;
-  display: flex;
-  align-items: center;
-  font-family: monospace;
-  font-size: 14px;
-}
-.checkbox-item {
-  display: inline-flex;
-  align-items: center;
-  margin-right: 15px;
-  font-size: 12px;
-}
-.checkbox-box {
-  width: 12px;
-  height: 12px;
-  border: 1px solid #000;
-  margin-right: 5px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 10px;
-}
-.checkbox-box.checked::after {
-  content: 'X';
-}
-h2.section-title {
-  font-size: 16px;
-  font-weight: 800;
-  margin: 0;
-  text-transform: uppercase;
-}
-.section-subtitle {
-  font-size: 11px;
-  color: #444;
-  margin-left: 8px;
-  font-weight: normal;
-  text-transform: none;
+
+.form-line {
+    border-bottom: 1px solid #4b5563;
+    background-color: transparent;
+    width: 100%;
+    outline: none;
 }
 `;
 
 export const DEFAULT_RECEIPT_HTML = `
-<div class="a4-page text-black">
-  <div class="left-border"></div>
-  
-  <div class="top-header">
-    <div>
-      <h1 class="text-5xl font-black tracking-tighter" style="color: #d4af37;">
-        HANDY<span class="text-white">LAND</span>
-      </h1>
-      <p class="text-[10px] mt-1 tracking-widest uppercase font-semibold text-gray-300">
-        AN- UND VERKAUF • REPARATUR • ZUBEHÖR
-      </p>
-    </div>
-    <div class="w-20 h-20 rounded-full bg-white flex items-center justify-center border-2 border-gray-300 overflow-hidden relative">
-      <!-- Globe SVG -->
-      <svg viewBox="0 0 100 100" class="w-full h-full text-black" fill="currentColor">
-        <path d="M50 0C22.4 0 0 22.4 0 50s22.4 50 50 50 50-22.4 50-50S77.6 0 50 0zm0 92C26.8 92 8 73.2 8 50S26.8 8 50 8s42 18.8 42 42-18.8 42-42 42z"/>
-        <path d="M50 8c-14 0-26 18.8-26 42s12 42 26 42 26-18.8 26-42S64 8 50 8zm0 76c-9.6 0-18-15.6-18-34s8.4-34 18-34 18 15.6 18 34-8.4 34-18 34z"/>
-        <path d="M8 50h84M24 30h52M24 70h52"/>
-      </svg>
-      <!-- Phone SVG Overlay -->
-      <div class="absolute inset-0 flex items-center justify-center">
-        <svg viewBox="0 0 24 24" class="w-10 h-10 text-yellow-500 transform rotate-12" fill="currentColor" stroke="black" stroke-width="1">
-          <path d="M17 2H7c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm4-3H8V5h8v12z"/>
-        </svg>
-      </div>
-    </div>
-  </div>
-
-  <div class="content-area space-y-6">
-    <!-- Section 1: PERSÖNLICHEN DATEN -->
-    <div>
-      <div class="flex items-baseline mb-2">
-        <h2 class="section-title">IHRE PERSÖNLICHEN DATEN</h2>
-        <span class="section-subtitle">Diese Felder bitte <strong>selbst ausfüllen</strong>.</span>
-      </div>
-      
-      <div class="grid grid-cols-[130px_1fr] gap-y-2 items-center text-xs">
-        <div>Vorname, Nachname</div>
-        <div class="box-input">{{customerName}}</div>
+<div class="print-container bg-white w-full max-w-[800px] shadow-2xl relative overflow-hidden text-gray-900 mx-auto">
+    <!-- Header -->
+    <header class="bg-[#1a1a1a] text-white p-6 md:px-10 relative flex justify-between items-center overflow-hidden">
+        <!-- Simulated starry background effect -->
+        <div class="absolute inset-0 opacity-30" style="background-image: radial-gradient(#fbbf24 1px, transparent 1px); background-size: 20px 20px;"></div>
         
-        <div>Telefon Nr./E-Mail</div>
-        <div class="box-input">{{customerPhone}} / {{customerEmail}}</div>
-        
-        <div>Handypasswort</div>
-        <div class="grid grid-cols-[1fr_120px_60px] gap-2 items-stretch">
-          <div class="box-input text-gray-500 relative">
-            <span class="absolute left-2 top-1 text-[8px] text-gray-400">Passwort</span>
-            <div class="mt-2 text-black">{{devicePassword}}</div>
-          </div>
-          <div class="box-input text-gray-500 relative">
-            <span class="absolute left-2 top-1 text-[8px] text-gray-400">SIM-Pin</span>
-            <div class="mt-2 text-black">{{simPin}}</div>
-          </div>
-          <div class="border border-black p-1 flex items-center justify-center bg-[#fcfcfc] relative overflow-hidden" style="min-width: 60px; min-height: 40px;">
-            {{devicePatternSvg}}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 2: GERÄTEDATEN -->
-    <div>
-      <div class="flex items-baseline mb-2">
-        <h2 class="section-title">IHRE GERÄTEDATEN</h2>
-        <span class="section-subtitle">Diese Felder bitte <strong>selbst ausfüllen</strong>.</span>
-      </div>
-      
-      <div class="grid grid-cols-[130px_1fr_120px] gap-y-2 items-center text-xs">
-        <div>Hersteller, Modell</div>
-        <div class="box-input mr-4">{{deviceModel}}</div>
-        <div class="flex flex-col gap-2">
-          <div class="flex items-center">
-            <span class="w-16">SIM Karte</span>
-            <div class="checkbox-box {{hasSimCardYes}}"></div> <span class="mr-2">Ja</span>
-            <div class="checkbox-box {{hasSimCardNo}}"></div> <span>Nein</span>
-          </div>
-          <div class="flex items-center">
-            <span class="w-16">Hülle</span>
-            <div class="checkbox-box {{hasCaseYes}}"></div> <span class="mr-2">Ja</span>
-            <div class="checkbox-box {{hasCaseNo}}"></div> <span>Nein</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 3: AUFNAHMEPROTOKOLL -->
-    <div>
-      <div class="flex items-baseline mb-2 border-t pt-4">
-        <h2 class="section-title">AUFNAHMEPROTOKOLL</h2>
-        <span class="section-subtitle">Bitte von Ihrem <strong>Serviceberater</strong> ausfüllen lassen.</span>
-      </div>
-      
-      <div class="text-xs space-y-4">
-        <div class="flex items-center">
-          <span>Wurde das Gerät in der Vergangenheit bereits repariert?</span>
-          <div class="checkbox-box ml-2 {{hadPreviousRepairsNo}}"></div> <span class="mr-2">Nein.</span>
-          <div class="checkbox-box {{hadPreviousRepairsYes}}"></div> <span>Ja , am Gerät wurden folgende Reparaturen in der Vergangenheit vorgenommen:</span>
-        </div>
-        <div class="border-b border-black w-full h-4 relative">
-          <span class="absolute bottom-0 text-xs italic text-blue-800">{{previousRepairsDesc}}</span>
+        <div class="relative z-10">
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tight">
+                <span class="text-yellow-400">HANDY</span>LAND
+            </h1>
+            <p class="text-sm md:text-base uppercase tracking-widest mt-1 font-semibold text-gray-300">
+                An- und Verkauf • Reparatur • Zubehör
+            </p>
         </div>
         
-        <div>
-          <span>Bestehende <strong>optische Mängel</strong> vor der Übergabe an unseren Serviceberater:</span>
-          <div class="border-b border-black w-full h-5 relative mt-1">
-            <span class="absolute bottom-0 text-xs italic text-blue-800">
-              {{conditionNotes}}
-            </span>
-          </div>
+        <!-- Globe / Phone Icon -->
+        <div class="relative z-10 w-20 h-20 bg-white rounded-full flex items-center justify-center p-2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-12 h-12 text-gray-800">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 009-9H3a9 9 0 009 9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3a9 9 0 019 9H3a9 9 0 019-9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-2.3 0-4.3 3.6-4.9 8.2h9.8C16.3 6.6 14.3 3 12 3z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21c-2.3 0-4.3-3.6-4.9-8.2h9.8c-.6 4.6-2.6 8.2-4.9 8.2z" />
+                <!-- Phone shape over globe -->
+                <rect x="9" y="5" width="6" height="14" rx="1" fill="#1a1a1a" stroke="#fbbf24" stroke-width="1.5" />
+            </svg>
         </div>
+    </header>
 
-        <div class="grid grid-cols-[130px_1fr] gap-2 pt-2">
-          <div>Defekt, Fehler oder<br/>Problem am Gerät:</div>
-          <div class="space-y-2">
-            <div>
-              <div class="checkbox-item"><div class="checkbox-box {{issue_SPEAKER}}"></div>Lautsprecher</div>
-              <div class="checkbox-item"><div class="checkbox-box {{issue_EARPIECE}}"></div>Ohrmuschel</div>
-              <div class="checkbox-item"><div class="checkbox-box {{issue_MICROPHONE}}"></div>Mikrofon</div>
+    <main class="p-6 md:px-10 space-y-6">
+        <!-- Section 1: Personal Data -->
+        <section>
+            <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-4">
+                <h2 class="text-lg font-bold uppercase tracking-wide m-0">Ihre persönlichen Daten</h2>
+                <span class="text-xs text-gray-600">Diese Felder bitte <span class="font-bold">selbst ausfüllen.</span></span>
             </div>
-            <div>
-              <div class="checkbox-item"><div class="checkbox-box {{issue_DISPLAY}}"></div>Display</div>
-              <div class="checkbox-item"><div class="checkbox-box {{issue_BACK_COVER}}"></div>Back Cover</div>
-              <div class="checkbox-item"><div class="checkbox-box {{issue_BATTERY}}"></div>Akku</div>
-              <div class="checkbox-item"><div class="checkbox-box {{issue_CHARGING_PORT}}"></div>Ladebuchse</div>
-              <div class="checkbox-item"><div class="checkbox-box {{issue_WATER_DAMAGE}}"></div>Wasserschaden</div>
+            
+            <div class="space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center">
+                    <label class="w-48 text-sm font-medium text-gray-700">Vorname, Nachname</label>
+                    <div class="form-input flex-1 flex items-center font-bold">{{customerName}}</div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row sm:items-center">
+                    <label class="w-48 text-sm font-medium text-gray-700">Telefon Nr./E-Mail</label>
+                    <div class="form-input flex-1 flex items-center font-bold">{{customerPhone}} / {{customerEmail}}</div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row sm:items-start pt-1">
+                    <label class="w-48 text-sm font-medium text-gray-700 pt-2">Handypasswort</label>
+                    <div class="flex-1 flex gap-4 items-start">
+                        <div class="form-input w-1/2 text-gray-500 relative flex items-center font-bold pt-4">
+                            <span class="absolute left-2 top-1 text-[8px] text-gray-400 font-normal">Passwort</span>
+                            <div class="text-black">{{devicePassword}}</div>
+                        </div>
+                        <div class="form-input w-1/3 text-gray-500 relative flex items-center font-bold pt-4">
+                            <span class="absolute left-2 top-1 text-[8px] text-gray-400 font-normal">SIM-Pin</span>
+                            <div class="text-black">{{simPin}}</div>
+                        </div>
+                        
+                        <!-- Pattern Lock visual -->
+                        <div class="border border-gray-500 bg-white relative overflow-hidden flex items-center justify-center" style="width: 70px; height: 70px; min-width: 70px;">
+                            {{devicePatternSvg}}
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="flex items-center">
-              <div class="checkbox-box {{issue_OTHER}}"></div> <span class="mr-2">sonstiges:</span>
-              <div class="border-b border-black flex-1 relative">
-                <span class="absolute bottom-0 text-xs italic text-blue-800">
-                  {{otherIssues}}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="mt-2">Zeitaufwand für Ihre<br/>Reparatur:</div>
-          <div class="flex flex-wrap mt-2">
-            <div class="checkbox-item"><div class="checkbox-box {{time_30min}}"></div>30 min</div>
-            <div class="checkbox-item"><div class="checkbox-box {{time_45min}}"></div>45 min</div>
-            <div class="checkbox-item"><div class="checkbox-box {{time_1h}}"></div>1 h</div>
-            <div class="checkbox-item"><div class="checkbox-box {{time_1_5h}}"></div>1,5 h</div>
-            <div class="checkbox-item"><div class="checkbox-box {{time_2h}}"></div>2 h</div>
-            <div class="checkbox-item"><div class="checkbox-box {{time_2_5h}}"></div>2,5 h</div>
-            <div class="checkbox-item"><div class="checkbox-box {{time_3h}}"></div>3 h</div>
-            <div class="checkbox-item"><div class="checkbox-box {{time_4h}}"></div>4 h</div>
-          </div>
-          
-          <div class="mt-2">Abholtermin:</div>
-          <div class="box-input mt-2">
-            {{pickupDate}}
-          </div>
-          
-          <div class="mt-2">Unterschrift des<br/>Serviceberater:</div>
-          <div class="grid grid-cols-[1fr_150px] gap-4 mt-2">
-            <div class="box-input h-12 relative overflow-hidden flex items-center justify-center bg-white">
-              {{adminSignatureImage}}
-            </div>
-            <div class="box-input h-12 relative text-right items-end justify-end">
-              <span class="absolute left-2 top-1 text-[8px] text-gray-500">Preis (inklusive MwSt):</span>
-              <span class="font-bold text-lg">{{estimatedPrice}}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        </section>
 
-    <!-- Section 4: Legal Text -->
-    <div class="text-[9px] leading-tight text-gray-700 space-y-2 mt-4 text-justify">
-      <p>
-        Hiermit beauftrage ich den HANDYLAND Service um alle Arbeiten gemäß obigen Informationen am Gerät durchzuführen. Das Gerät hat keine Beschädigungen außer der oben angegebenen. <strong>Ich bin mir bewusst, dass gespeicherte Daten, Programme und Lizenzen im Rahmen der Reparatur verloren gehen können und mache den HANDYLAND Service nicht für Datenverlust haftbar.</strong> Aller Angaben erfolgen ohne Gewähr. Alle Rechte vorbehalten.
-      </p>
-      <p>
-        <strong>Wir weisen darauf hin, dass trotz größter Sorgfalt, gespeicherte Daten auf Ihrem Gerät verloren gehen können. Sorgen Sie bitte dafür, dass Ihre Daten gesichert sind und Teile kaputt gehen können.</strong>
-      </p>
-      <p>
-        HANDYLAND haftet NICHT für andere Teile im/am Gerät, die durch Tausch/Reparatur kaputt gehen können. Wir haften NUR auf die von uns getauschten und/oder bei uns gekauften Teile. Keine Haftung bei Software- oder Datenproblem.
-      </p>
-      <p>
-        <strong>Wenn das Gerät nicht innerhalb von 10 Werktagen ab dem vorher vereinbarten Abholtermin abgeholt wird, so fällt bei der Abholung eine Aufwandspauschale von 10€ an.</strong>
-      </p>
-    </div>
+        <hr class="border-gray-300">
 
-    <!-- Section 5: Signature -->
-    <div class="grid grid-cols-[130px_1fr] gap-4 mt-4">
-      <div>
-        <div class="text-[10px]">Datum:</div>
-        <div class="box-input mt-1">{{createdAt}}</div>
-        
-        <div class="text-[10px] mt-2">Unterschrift des<br/>Kunden:</div>
-      </div>
-      <div>
-        <div class="text-[10px]">
-          Mit meiner Unterschrift <strong>akzeptiere ich die Bedingungen</strong> auf diesem Dokument und <strong>bestätige den Reparaturauftrag</strong>.
-        </div>
-        <div class="box-input h-16 mt-1 relative overflow-hidden flex items-center justify-center bg-white">
-          {{signatureImage}}
-        </div>
-        <p class="text-[8px] text-gray-500 mt-1">Ticket: {{ticketNumber}}</p>
-      </div>
-    </div>
-    
-  </div>
+        <!-- Section 2: Device Data -->
+        <section>
+            <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-4">
+                <h2 class="text-lg font-bold uppercase tracking-wide m-0">Ihre Gerätedaten</h2>
+                <span class="text-xs text-gray-600">Diese Felder bitte <span class="font-bold">selbst ausfüllen.</span></span>
+            </div>
 
-  <!-- Footer -->
-  <div class="footer-bar tracking-widest">
-    WIR HOFFEN, IHR GERÄT IST BALD WIEDER EINSATZBEREIT! <strong>DANKE FÜR IHR VERTRAUEN.</strong>
-  </div>
+            <div class="flex flex-col md:flex-row md:items-center gap-6">
+                <div class="flex-1 flex flex-col sm:flex-row sm:items-center">
+                    <label class="w-40 text-sm font-medium text-gray-700">Hersteller, Modell</label>
+                    <div class="form-input flex-1 flex items-center font-bold">{{deviceModel}}</div>
+                </div>
+                
+                <div class="flex flex-col gap-2 min-w-[150px]">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-700 mr-2">SIM Karte</span>
+                        <div class="flex gap-3">
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{hasSimCardYes}} onclick="return false;"> Ja</label>
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{hasSimCardNo}} onclick="return false;"> Nein</label>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-700 mr-2">Hülle</span>
+                        <div class="flex gap-3">
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{hasCaseYes}} onclick="return false;"> Ja</label>
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{hasCaseNo}} onclick="return false;"> Nein</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-gray-300">
+
+        <!-- Section 3: Protocol -->
+        <section class="bg-gray-50 -mx-6 px-6 py-4 md:-mx-10 md:px-10 border-y border-gray-200">
+            <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-4">
+                <h2 class="text-lg font-bold uppercase tracking-wide m-0">Aufnahmeprotokoll</h2>
+                <span class="text-xs text-gray-600">Bitte von Ihrem <span class="font-bold">Serviceberater</span> ausfüllen lassen.</span>
+            </div>
+
+            <div class="space-y-4 text-sm">
+                <!-- Text lines -->
+                <div>
+                    <p class="inline">Wurde das Gerät in der Vergangenheit bereits repariert? </p>
+                    <label class="inline-flex items-center mx-2 cursor-pointer"><input type="checkbox" class="w-3 h-3 border-gray-500 rounded-none mr-1 accent-black" {{hadPreviousRepairsNo}} onclick="return false;"> Nein.</label>
+                    <label class="inline-flex items-center cursor-pointer"><input type="checkbox" class="w-3 h-3 border-gray-500 rounded-none mr-1 accent-black" {{hadPreviousRepairsYes}} onclick="return false;"> Ja, am Gerät wurden folgende</label>
+                    <p class="inline font-bold">Reparaturen in der Vergangenheit</p> vorgenommen:
+                    <div class="form-line mt-1 flex items-end min-h-[24px] text-blue-800 italic font-medium px-1">{{previousRepairsDesc}}</div>
+                </div>
+
+                <div class="flex items-end gap-2">
+                    <p class="whitespace-nowrap">Bestehende <span class="font-bold">optische Mängel</span> vor der Übergabe an unseren Serviceberater:</p>
+                    <div class="form-line flex-1 min-h-[24px] text-blue-800 italic font-medium px-1">{{conditionNotes}}</div>
+                </div>
+
+                <hr class="border-gray-300 my-4">
+
+                <!-- Defects Table -->
+                <div class="flex flex-col md:flex-row gap-4 py-2">
+                    <div class="w-48 font-medium text-gray-700">Defekt, Fehler oder<br>Problem am Gerät:</div>
+                    <div class="flex-1 space-y-3">
+                        <div class="flex flex-wrap gap-4">
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{issue_SPEAKER}} onclick="return false;"> Lautsprecher</label>
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{issue_EARPIECE}} onclick="return false;"> Ohrmuschel</label>
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{issue_MICROPHONE}} onclick="return false;"> Mikrofon</label>
+                        </div>
+                        <div class="flex flex-wrap gap-4">
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{issue_DISPLAY}} onclick="return false;"> Display</label>
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{issue_BACK_COVER}} onclick="return false;"> Back Cover</label>
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{issue_BATTERY}} onclick="return false;"> Akku</label>
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{issue_CHARGING_PORT}} onclick="return false;"> Ladebuchse</label>
+                            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{issue_WATER_DAMAGE}} onclick="return false;"> Wasserschaden</label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="flex items-center gap-1 cursor-pointer whitespace-nowrap"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{issue_OTHER}} onclick="return false;"> sonstiges:</label>
+                            <div class="form-line flex-1 min-h-[24px] text-blue-800 italic font-medium px-1">{{otherIssues}}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 items-center mt-2">
+                    <div class="w-48 font-medium text-gray-700">Zeitaufwand für Ihre<br>Reparatur:</div>
+                    <div class="flex-1 flex flex-wrap gap-4">
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{time_30min}} onclick="return false;"> 30 min</label>
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{time_45min}} onclick="return false;"> 45 min</label>
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{time_1h}} onclick="return false;"> 1h</label>
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{time_1_5h}} onclick="return false;"> 1,5 h</label>
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{time_2h}} onclick="return false;"> 2 h</label>
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{time_2_5h}} onclick="return false;"> 2,5 h</label>
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{time_3h}} onclick="return false;"> 3 h</label>
+                        <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" class="w-4 h-4 border-gray-500 rounded-none accent-black" {{time_4h}} onclick="return false;"> 4 h</label>
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 items-center mt-4">
+                    <div class="w-48 font-medium text-gray-700">Abholtermin:</div>
+                    <div class="flex-1">
+                        <div class="form-input bg-white h-10 flex items-center font-bold">{{pickupDate}}</div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 mt-4">
+                    <div class="w-48 font-medium text-gray-700">Unterschrift des<br>Serviceberater:</div>
+                    <div class="flex-1 flex gap-4">
+                        <div class="flex-1 border border-gray-500 h-16 bg-white relative overflow-hidden flex items-center justify-center">
+                            {{adminSignatureImage}}
+                        </div>
+                        <div class="w-32 border border-gray-500 h-16 bg-white p-1 flex flex-col justify-end relative">
+                            <span class="absolute left-1 top-1 text-[10px] text-gray-500">Preis (inklusive MwSt):</span>
+                            <div class="w-full text-right outline-none font-bold text-lg bg-transparent">{{estimatedPrice}}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Terms and Conditions -->
+        <section class="text-[10px] md:text-[11px] leading-snug text-gray-600 space-y-2 text-justify">
+            <p>
+                Hiermit beauftrage ich den HANDYLAND Service um alle Arbeiten gemäß obigen Informationen am Gerät durchzuführen. 
+                Das Gerät hat keine Beschädigungen außer der oben angegebenen. 
+                <strong class="text-gray-800">Ich bin mir bewusst, dass gespeicherte Daten, Programme und Lizenzen im Rahmen der Reparatur verloren gehen können 
+                und mache den HANDYLAND Service nicht für Datenverlust haftbar.</strong> Aller Angaben erfolgen ohne Gewähr. Alle Rechte vorbehalten.
+            </p>
+            <p class="font-bold text-gray-800">
+                Wir weisen darauf hin, dass trotz größter Sorgfalt, gespeicherte Daten auf Ihrem Gerät verloren gehen können. 
+                Sorgen Sie bitte dafür, dass Ihre Daten gesichert sind und Teile kaputt gehen können.
+            </p>
+            <p>
+                HANDYLAND haftet NICHT für andere Teile im/am Gerät, die durch Tausch/Reparatur kaputt gehen können. 
+                Wir haften NUR auf die von uns getauschten und/oder bei uns gekauften Teile. Keine Haftung bei Software- oder Datenproblem.
+            </p>
+            <p class="font-bold text-gray-800">
+                Wenn das Gerät nicht innerhalb von 10 Werktagen ab dem vorher vereinbarten Abholtermin abgeholt wird, 
+                so fällt bei der Abholung eine Aufwandspauschale von 10€ an.
+            </p>
+        </section>
+
+        <!-- Customer Signature -->
+        <section class="flex gap-4 pt-1">
+            <div class="w-32 flex flex-col gap-1">
+                <label class="text-xs text-gray-700">Datum:</label>
+                <div class="form-input h-8 bg-gray-200 flex items-center font-bold text-sm">{{createdAt}}</div>
+            </div>
+            <div class="flex-1 flex flex-col gap-1">
+                <label class="text-xs text-gray-700 flex gap-2">
+                    Unterschrift des Kunden:
+                    <span class="text-[11px] font-normal mt-0.5 text-gray-800 leading-tight">
+                        Mit meiner Unterschrift <strong>akzeptiere ich die Bedingungen</strong><br>
+                        auf diesem Dokument und <strong>bestätige den Reparaturauftrag.</strong>
+                    </span>
+                </label>
+                <div class="border border-gray-500 h-16 bg-white w-full relative overflow-hidden flex items-center justify-center">
+                    {{signatureImage}}
+                    <span class="absolute bottom-1 right-2 text-[8px] text-gray-400">Ticket: {{ticketNumber}}</span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Banner -->
+    <footer class="bg-[#1a1a1a] text-gray-300 text-center py-4 text-[10px] md:text-xs font-semibold tracking-wide uppercase">
+        Wir hoffen, Ihr Gerät ist bald wieder einsatzbereit! <span class="text-white font-bold">Danke für Ihr Vertrauen.</span>
+    </footer>
+
 </div>
 `;
