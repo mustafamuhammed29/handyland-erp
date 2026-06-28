@@ -37,6 +37,12 @@ export default async function PrintTicketPage({ params }: { params: Promise<{ id
 
   return (
     <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          @page { margin: 0; size: A4; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+      `}} />
       <div className="bg-gray-100 min-h-screen py-10 print:bg-white print:py-0">
         <ReceiptPrintLayout repair={repair} config={config} />
       </div>
