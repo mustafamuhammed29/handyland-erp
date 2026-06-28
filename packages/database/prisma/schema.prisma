@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ===== CUSTOMER =====
@@ -43,6 +44,7 @@ model Customer {
   consents        ConsentRecord[]
   notes           CustomerNote[]
   campaigns       CampaignRecipient[]
+  partOrders      PartOrder[]
   
   @@index([phone])
   @@index([email])
@@ -95,6 +97,7 @@ model Repair {
   
   // Security (encrypted)
   devicePasswordEncrypted  String?
+  devicePatternEncrypted   String?
   simPinEncrypted          String?
   
   // Problem
@@ -142,6 +145,10 @@ model Repair {
   
   // PDF
   receiptPdfUrl   String?
+  
+  // Admin Pre-Print Fields
+  repairTimeEstimate String?
+  adminSignatureImage String?
   
   @@index([ticketNumber])
   @@index([customerId])
@@ -340,14 +347,72 @@ model CampaignRecipient {
 
 // ===== SETTINGS =====
 model ShopSettings {
-  id              String @id @default("singleton")
-  shopName        String @default("HANDYLAND")
-  address         String?
-  phone           String?
-  email           String?
-  website         String?
-  logoUrl         String?
-  loyaltyConfig   Json?
-  termsContent    Json?
-  updatedAt       DateTime @updatedAt
+  id                  String @id @default("singleton")
+  shopName            String @default("HANDYLAND")
+  address             String?
+  phone               String?
+  email               String?
+  website             String?
+  logoUrl             String?
+  loyaltyConfig       Json?
+  termsContent        Json?
+  receiptTemplateHtml String? @db.Text
+  receiptTemplateCss  String? @db.Text
+  updatedAt           DateTime @updatedAt
+}
+
+// ===== INVENTORY =====
+model Part {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  name        String
+  category    String?  // e.g., "Display", "Akku"
+  sku         String?  @unique
+  quantity    Int      @default(0)
+  minQuantity Int      @default(5)
+  price       Decimal  @db.Decimal(10,2) // Selling price
+  cost        Decimal? @db.Decimal(10,2) // Purchasing cost
+  location    String?  // e.g., "Regal A1"
+  
+  @@index([category])
+}
+
+// ===== CUSTOMER PART ORDERS =====
+model PartOrder {
+  id          String          @id @default(cuid())
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // The customer who needs the part
+  customerId  String
+  customer    Customer        @relation(fields: [customerId], references: [id])
+
+  // What is needed
+  partName    String          // e.g. "iPhone 13 Display Original"
+  description String?         // Additional notes
+
+  // Status tracking
+  status      PartOrderStatus @default(PENDING)
+  orderedAt   DateTime?       // When we placed the supplier order
+  arrivedAt   DateTime?       // When the part arrived
+
+  // Pricing
+  estimatedPrice Decimal?  @db.Decimal(10,2)
+  
+  // Notes
+  notes       String?
+  
+  @@index([customerId])
+  @@index([status])
+}
+
+enum PartOrderStatus {
+  PENDING       // Customer requested, not yet ordered
+  ORDERED       // We placed order with supplier
+  ARRIVED       // Part arrived at shop
+  NOTIFIED      // Customer has been called/notified
+  COMPLETED     // Customer picked up / repair done
+  CANCELLED     // Order was cancelled
 }
