@@ -189,7 +189,7 @@ export function ReceiptPrintLayout({ repair, config }: { repair: any; config: Re
   const renderValue = (val: any) => val || "";
 
   return (
-    <div className="print-container bg-white w-full max-w-[800px] shadow-2xl relative overflow-hidden text-gray-900 mx-auto font-sans" style={{ minHeight: "297mm" }}>
+    <div className="print-container bg-white w-full max-w-[800px] shadow-2xl relative overflow-hidden text-gray-900 mx-auto font-sans" style={{ minHeight: "297mm", maxHeight: "297mm" }}>
       {/* Header */}
       <header className="bg-[#1a1a1a] text-white p-6 md:px-10 relative flex justify-between items-center overflow-hidden h-[130px]">
         {/* Simulated starry background effect */}
@@ -220,10 +220,10 @@ export function ReceiptPrintLayout({ repair, config }: { repair: any; config: Re
         </div>
       </header>
 
-      <main className="p-6 md:px-10 space-y-6">
+      <main className="p-6 md:px-10 space-y-4">
         {/* Section 1: Personal Data */}
         <section>
-          <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-2">
             <h2 className="text-lg font-bold uppercase tracking-wide m-0">{c.sec1Title}</h2>
             <span className="text-xs text-gray-600">{c.sec1Sub1}<span className="font-bold">{c.sec1Sub2}</span></span>
           </div>
@@ -267,7 +267,7 @@ export function ReceiptPrintLayout({ repair, config }: { repair: any; config: Re
 
         {/* Section 2: Device Data */}
         <section>
-          <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-2">
             <h2 className="text-lg font-bold uppercase tracking-wide m-0">{c.sec2Title}</h2>
             <span className="text-xs text-gray-600">{c.sec2Sub}</span>
           </div>
@@ -303,23 +303,23 @@ export function ReceiptPrintLayout({ repair, config }: { repair: any; config: Re
 
         {/* Section 3: Protocol */}
         <section className="bg-gray-50 -mx-6 px-6 py-4 md:-mx-10 md:px-10 border-y border-gray-200">
-          <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-2">
             <h2 className="text-lg font-bold uppercase tracking-wide m-0">{c.sec3Title}</h2>
             <span className="text-xs text-gray-600">{c.sec3Sub}</span>
           </div>
 
-          <div className="space-y-4 text-sm">
+          <div className="space-y-3 text-sm">
             <div>
               <p className="inline">{c.txtPrevRepairsQ}</p>
               <label className="inline-flex items-center mx-2 cursor-pointer"><input type="checkbox" checked={!isChecked(repair?.hadPreviousRepairs)} className="w-3 h-3 border-gray-500 rounded-none mr-1 accent-black" readOnly /> {c.txtPrevRepairsNo}</label>
               <label className="inline-flex items-center cursor-pointer"><input type="checkbox" checked={isChecked(repair?.hadPreviousRepairs)} className="w-3 h-3 border-gray-500 rounded-none mr-1 accent-black" readOnly /> {c.txtPrevRepairsYes}</label>
               <p className="inline font-bold mx-1">{c.txtPrevRepairsBold}</p> {c.txtPrevRepairsEnd}
-              <div className="border-b border-gray-600 mt-1 flex items-end min-h-[24px] text-blue-800 italic font-medium px-1">{renderValue(repair?.previousRepairsDesc)}</div>
+              <div className="border-b border-gray-600 mt-1 min-h-[24px] text-blue-800 italic font-medium px-1 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{renderValue(repair?.previousRepairsDesc)}</div>
             </div>
 
-            <div className="flex items-end gap-2">
-              <p className="whitespace-nowrap">{c.txtCondBefore}<span className="font-bold">{c.txtCondBold}</span>{c.txtCondAfter}</p>
-              <div className="border-b border-gray-600 flex-1 min-h-[24px] text-blue-800 italic font-medium px-1">{getConditionNotes()}</div>
+            <div className="flex items-start gap-2 pt-1">
+              <p className="whitespace-nowrap pt-1">{c.txtCondBefore}<span className="font-bold">{c.txtCondBold}</span>{c.txtCondAfter}</p>
+              <div className="border-b border-gray-600 flex-1 min-h-[24px] text-blue-800 italic font-medium px-1 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{getConditionNotes()}</div>
             </div>
 
             <hr className="border-gray-300 my-4" />
@@ -340,8 +340,8 @@ export function ReceiptPrintLayout({ repair, config }: { repair: any; config: Re
                   <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked={hasIssue('WATER_DAMAGE')} className="w-4 h-4 border-gray-500 rounded-none accent-black" readOnly /> {c.defWaterDamage}</label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <label className="flex items-center gap-1 cursor-pointer whitespace-nowrap"><input type="checkbox" checked={hasIssue('OTHER') || getOtherIssues() !== ""} className="w-4 h-4 border-gray-500 rounded-none accent-black" readOnly /> {c.defOther}</label>
-                  <div className="border-b border-gray-600 flex-1 min-h-[24px] text-blue-800 italic font-medium px-1">{getOtherIssues()}</div>
+                  <label className="flex items-center gap-1 cursor-pointer whitespace-nowrap pt-1"><input type="checkbox" checked={hasIssue('OTHER') || getOtherIssues() !== ""} className="w-4 h-4 border-gray-500 rounded-none accent-black" readOnly /> {c.defOther}</label>
+                  <div className="border-b border-gray-600 flex-1 min-h-[24px] text-blue-800 italic font-medium px-1 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{getOtherIssues()}</div>
                 </div>
               </div>
             </div>
