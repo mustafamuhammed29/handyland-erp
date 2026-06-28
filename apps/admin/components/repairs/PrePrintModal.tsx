@@ -4,9 +4,12 @@ import React, { useState, useRef, useEffect } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import { Trash2, Loader2, Download, X } from "lucide-react";
 import { RepairOrderPDF } from "./RepairOrderPDF";
-import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
+import dynamic from "next/dynamic";
 import QRCode from "qrcode";
 import { useRouter } from "next/navigation";
+
+const PDFViewer = dynamic(() => import("@react-pdf/renderer").then(m => m.PDFViewer), { ssr: false });
+const PDFDownloadLink = dynamic(() => import("@react-pdf/renderer").then(m => m.PDFDownloadLink), { ssr: false });
 
 const DEFECT_OPTIONS = [
   { id: "DISPLAY", label: "Display" },
@@ -207,14 +210,18 @@ export function PrePrintModal({ repair, isOpen, onClose }: { repair: any, isOpen
                   <Trash2 className="w-3 h-3 mr-1" /> Löschen
                 </button>
               </div>
-              <div className="border rounded-md bg-white touch-none">
+              <div className="border rounded-md bg-white">
                 {adminSignature && !sigCanvas.current ? (
-                  <img src={adminSignature} alt="Signature" className="h-32 object-contain cursor-pointer" onClick={() => setAdminSignature("")} />
+                  <img src={adminSignature} alt="Signature" className="h-32 object-contain cursor-pointer w-full" onClick={() => setAdminSignature("")} />
                 ) : (
                   <SignatureCanvas 
                     ref={sigCanvas}
                     penColor="black"
-                    canvasProps={{ width: 400, height: 128, className: "w-full h-32" }}
+                    canvasProps={{ 
+                      className: "w-full h-32 cursor-crosshair",
+                      style: { touchAction: 'none' } 
+                    }}
+                    clearOnResize={false}
                   />
                 )}
               </div>
