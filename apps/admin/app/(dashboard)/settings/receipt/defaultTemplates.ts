@@ -257,14 +257,14 @@ export const DEFAULT_RECEIPT_HTML = `
           
           <div class="mt-2">Zeitaufwand für Ihre<br/>Reparatur:</div>
           <div class="flex flex-wrap mt-2">
-            <div class="checkbox-item"><div class="checkbox-box"></div>30 min</div>
-            <div class="checkbox-item"><div class="checkbox-box"></div>45 min</div>
-            <div class="checkbox-item"><div class="checkbox-box"></div>1h</div>
-            <div class="checkbox-item"><div class="checkbox-box"></div>1,5 h</div>
-            <div class="checkbox-item"><div class="checkbox-box"></div>2 h</div>
-            <div class="checkbox-item"><div class="checkbox-box"></div>2,5</div>
-            <div class="checkbox-item"><div class="checkbox-box"></div>3 h</div>
-            <div class="checkbox-item"><div class="checkbox-box"></div>4 h</div>
+            <div class="checkbox-item"><div class="checkbox-box {{time_30min}}"></div>30 min</div>
+            <div class="checkbox-item"><div class="checkbox-box {{time_45min}}"></div>45 min</div>
+            <div class="checkbox-item"><div class="checkbox-box {{time_1h}}"></div>1 h</div>
+            <div class="checkbox-item"><div class="checkbox-box {{time_1_5h}}"></div>1,5 h</div>
+            <div class="checkbox-item"><div class="checkbox-box {{time_2h}}"></div>2 h</div>
+            <div class="checkbox-item"><div class="checkbox-box {{time_2_5h}}"></div>2,5 h</div>
+            <div class="checkbox-item"><div class="checkbox-box {{time_3h}}"></div>3 h</div>
+            <div class="checkbox-item"><div class="checkbox-box {{time_4h}}"></div>4 h</div>
           </div>
           
           <div class="mt-2">Abholtermin:</div>
@@ -274,7 +274,9 @@ export const DEFAULT_RECEIPT_HTML = `
           
           <div class="mt-2">Unterschrift des<br/>Serviceberater:</div>
           <div class="grid grid-cols-[1fr_150px] gap-4 mt-2">
-            <div class="box-input h-12"></div>
+            <div class="box-input h-12 relative overflow-hidden flex items-center justify-center bg-white">
+              {{adminSignatureImage}}
+            </div>
             <div class="box-input h-12 relative text-right items-end justify-end">
               <span class="absolute left-2 top-1 text-[8px] text-gray-500">Preis (inklusive MwSt):</span>
               <span class="font-bold text-lg">{{estimatedPrice}}</span>
