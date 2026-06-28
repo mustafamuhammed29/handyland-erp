@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { saveReceiptTemplate } from "../../../actions/settings";
-import { Save, RefreshCw, CheckCircle2, ZoomIn, ZoomOut, Eye, Settings2 } from "lucide-react";
+import { Save, RefreshCw, CheckCircle2, ZoomIn, ZoomOut, Eye, Settings2, ImagePlus } from "lucide-react";
 import { ReceiptPrintLayout, ReceiptConfig, DEFAULT_RECEIPT_CONFIG } from "../../../../components/repairs/ReceiptPrintLayout";
 
 // Dummy Data
@@ -39,6 +39,47 @@ export default function ReceiptEditorClient({ initialConfigString }: { initialCo
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [scale, setScale] = useState(0.55);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_SIZE = 200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // Use JPEG to save space if it's not a PNG, but PNG is better for logos (transparency)
+        // Since logos often have transparency, we stick to PNG but small size (200x200 max)
+        const dataUrl = canvas.toDataURL("image/png");
+        handleChange("logoUrl", dataUrl);
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -114,7 +155,26 @@ export default function ReceiptEditorClient({ initialConfigString }: { initialCo
           
           <div className="space-y-4">
             <h3 className="text-sm font-bold border-b pb-2 text-primary">Kopfzeile (Header)</h3>
-            <Field label="Logo URL (leer für Standard-Icon)" field="logoUrl" />
+            <div className="flex gap-2 items-end">
+              <div className="flex-1">
+                <Field label="Logo URL (leer für Standard-Icon)" field="logoUrl" />
+              </div>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex h-9 items-center gap-2 rounded-md border bg-muted/50 px-3 text-xs font-medium hover:bg-muted"
+                title="Bild hochladen"
+              >
+                <ImagePlus className="w-4 h-4" />
+                Upload
+              </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileUpload} 
+                accept="image/*" 
+                className="hidden" 
+              />
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <Field label="Shop Name (Teil 1)" field="shopNameMain" />
               <Field label="Shop Name (Teil 2)" field="shopNameSub" />
