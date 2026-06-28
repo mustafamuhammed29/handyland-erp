@@ -243,6 +243,7 @@ export function ReceiptPrintLayout({ repair, config }: { repair: any; config: Re
               </div>
             </div>
             
+            <div className="flex flex-col sm:flex-row sm:items-start pt-1">
               <label className="w-48 text-sm font-medium text-gray-700 pt-1">{c.lblPassword}</label>
               <div className="flex-1 flex gap-4 items-start">
                 <div className="border border-gray-600 bg-transparent px-2 min-h-[32px] w-1/2 text-gray-500 relative flex items-center font-bold pt-3">
