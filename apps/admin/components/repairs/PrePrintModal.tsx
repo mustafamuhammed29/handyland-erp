@@ -2,14 +2,9 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import SignatureCanvas from "react-signature-canvas";
-import { Trash2, Loader2, Download, X } from "lucide-react";
-import { RepairOrderPDF } from "./RepairOrderPDF";
-import dynamic from "next/dynamic";
+import { Trash2, Loader2, Download, X, Printer } from "lucide-react";
 import QRCode from "qrcode";
 import { useRouter } from "next/navigation";
-
-const PDFViewer = dynamic(() => import("@react-pdf/renderer").then(m => m.PDFViewer), { ssr: false });
-const PDFDownloadLink = dynamic(() => import("@react-pdf/renderer").then(m => m.PDFDownloadLink), { ssr: false });
 
 const DEFECT_OPTIONS = [
   { id: "DISPLAY", label: "Display" },
@@ -240,20 +235,21 @@ export function PrePrintModal({ repair, isOpen, onClose }: { repair: any, isOpen
         {step === "preview" && (
           <div className="space-y-4 h-[70vh] flex flex-col">
             <div className="flex-1 border rounded-md overflow-hidden bg-muted">
-              <PDFViewer width="100%" height="100%" className="w-full h-full border-none">
-                <RepairOrderPDF repair={updatedRepair} qrCodeDataUrl={qrCodeDataUrl} />
-              </PDFViewer>
+              <iframe 
+                src={`/print/${updatedRepair.id}`} 
+                className="w-full h-full border-none bg-white"
+                title="Druckvorschau"
+              />
             </div>
             <div className="flex justify-between mt-4">
               <button onClick={() => setStep("form")} className="px-4 py-2 border rounded-md text-sm font-medium hover:bg-muted">Zurück zum Formular</button>
-              <PDFDownloadLink document={<RepairOrderPDF repair={updatedRepair} qrCodeDataUrl={qrCodeDataUrl} />} fileName={`Reparaturauftrag_${repair.ticketNumber}.pdf`}>
-                {({ loading }) => (
-                  <button disabled={loading} className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:opacity-90 disabled:opacity-50">
-                    {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
-                    PDF speichern / Drucken
-                  </button>
-                )}
-              </PDFDownloadLink>
+              <button 
+                onClick={() => window.open(`/print/${updatedRepair.id}`, "_blank")} 
+                className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:opacity-90"
+              >
+                <Printer className="w-4 h-4 mr-2" />
+                Drucken / als PDF speichern
+              </button>
             </div>
           </div>
         )}

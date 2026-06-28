@@ -64,6 +64,7 @@ const VARIABLE_GROUPS: VariableGroup[] = [
       { key: "{{hadPreviousRepairsYes}}", description: "Frühere Reparaturen Ja" },
       { key: "{{previousRepairsDesc}}",   description: "Beschreibung frühere Rep." },
       { key: "{{conditionNotes}}",        description: "Zustandsnotizen" },
+      { key: "{{repairTimeEstimate}}",    description: "Zeitaufwand für Reparatur" },
       { key: "{{pickupDate}}",            description: "Abholtermin" },
       { key: "{{estimatedPrice}}",        description: "Preis inkl. MwSt." },
     ],
@@ -72,9 +73,10 @@ const VARIABLE_GROUPS: VariableGroup[] = [
     label: "Dokument",
     color: "#a855f7",
     vars: [
-      { key: "{{createdAt}}",      description: "Erstellungsdatum" },
-      { key: "{{ticketNumber}}",   description: "Ticket-Nummer" },
-      { key: "{{signatureImage}}", description: "Unterschrift (HTML)" },
+      { key: "{{createdAt}}",           description: "Erstellungsdatum" },
+      { key: "{{ticketNumber}}",        description: "Ticket-Nummer" },
+      { key: "{{signatureImage}}",      description: "Unterschrift Kunde (HTML)" },
+      { key: "{{adminSignatureImage}}", description: "Unterschrift Service (HTML)" },
     ],
   },
 ];

@@ -86,11 +86,15 @@ export default async function PrintTicketPage({ params }: { params: Promise<{ id
       ...repair.issues.filter(i => !['SPEAKER','EARPIECE','MICROPHONE','DISPLAY','BACK_COVER','BATTERY','CHARGING_PORT','WATER_DAMAGE'].includes(i.issueType)).map(i => i.issueType),
       repair.problemDescription || ""
     ].filter(Boolean).join(", "),
+    "{{repairTimeEstimate}}": repair.repairTimeEstimate || "",
     "{{pickupDate}}": repair.pickupDate ? format(new Date(repair.pickupDate), "dd.MM.yyyy HH:mm") : "",
     "{{estimatedPrice}}": repair.estimatedPrice ? `€ ${repair.estimatedPrice}` : "",
     "{{createdAt}}": format(new Date(repair.createdAt), "dd.MM.yyyy"),
     "{{signatureImage}}": repair.signatureImage 
       ? `<img src="${repair.signatureImage}" alt="Kundenunterschrift" style="height: 100%; object-fit: contain; filter: invert(1);" />` 
+      : "",
+    "{{adminSignatureImage}}": repair.adminSignatureImage 
+      ? `<img src="${repair.adminSignatureImage}" alt="Mitarbeiterunterschrift" style="height: 100%; object-fit: contain; filter: invert(1);" />` 
       : "",
     "{{ticketNumber}}": repair.ticketNumber,
   };
