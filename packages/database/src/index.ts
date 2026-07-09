@@ -17,11 +17,5 @@ export function normalizePhone(phone: string): string {
   return normalized;
 }
 
-import { LoyaltyTier } from '@prisma/client';
-
-export function calculateLoyaltyTier(repairsCount: number): LoyaltyTier {
-  if (repairsCount >= 10) return 'VIP';
-  if (repairsCount >= 5) return 'GOLD';
-  if (repairsCount >= 2) return 'SILVER';
-  return 'BRONZE';
-}
+export * from './encryption';
+export * from './loyalty';

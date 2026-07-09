@@ -1,4 +1,4 @@
-import { prisma } from "@repo/database";
+import { prisma, decrypt } from "@repo/database";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
@@ -141,17 +141,17 @@ export default async function RepairDetailPage({ params }: { params: Promise<{ i
                     <span className="text-muted-foreground block text-xs">Geräte-Passwort</span>
                     {repair.devicePatternEncrypted ? (
                       <div className="mt-1">
-                        <PatternDisplay pattern={repair.devicePatternEncrypted} />
+                        <PatternDisplay pattern={decrypt(repair.devicePatternEncrypted) || ""} />
                       </div>
                     ) : (
                       <span className="font-medium font-mono bg-muted px-2 py-0.5 rounded">
-                        {repair.devicePasswordEncrypted || "Keins"}
+                        {decrypt(repair.devicePasswordEncrypted) || "Keins"}
                       </span>
                     )}
                   </div>
                   <div>
                     <span className="text-muted-foreground block text-xs">SIM-PIN</span>
-                    <span className="font-medium font-mono bg-muted px-2 py-0.5 rounded">{repair.simPinEncrypted || "Keins"}</span>
+                    <span className="font-medium font-mono bg-muted px-2 py-0.5 rounded">{decrypt(repair.simPinEncrypted) || "Keins"}</span>
                   </div>
                 </div>
               </div>

@@ -1,62 +1,51 @@
-import { prisma } from "@repo/database";
+import { prisma, decrypt } from "@repo/database";
 import { notFound } from "next/navigation";
-import { getShopSettings } from "../../actions/settings";
-import { ReceiptPrintLayout, ReceiptConfig, DEFAULT_RECEIPT_CONFIG } from "../../../components/repairs/ReceiptPrintLayout";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { PrintViewerClient } from "../../../components/repairs/PrintViewerClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function PrintTicketPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [repair, settings] = await Promise.all([
-    prisma.repair.findUnique({
-      where: { id },
-      include: {
-        customer: true,
-        device: true,
-        issues: true,
-        conditionItems: true,
-      }
-    }),
-    getShopSettings()
-  ]);
+  const repair = await prisma.repair.findUnique({
+    where: { id },
+    include: {
+      customer: true,
+      device: true,
+      issues: true,
+      conditionItems: true,
+    }
+  });
 
   if (!repair) return notFound();
 
-  let config: ReceiptConfig = DEFAULT_RECEIPT_CONFIG;
-  if (settings && (settings as any).receiptTemplateHtml) {
-    try {
-      const parsed = JSON.parse((settings as any).receiptTemplateHtml);
-      if (parsed && parsed.shopNameMain) {
-        config = parsed;
-      }
-    } catch (e) {
-      // Fallback to default if old HTML string is found
-    }
-  }
+  // Decrypt security fields securely on the server
+  const decryptedPassword = decrypt(repair.devicePasswordEncrypted);
+  const decryptedPin = decrypt(repair.simPinEncrypted);
+  const decryptedPattern = decrypt(repair.devicePatternEncrypted);
+
+  const qrCodeUrl = `https://handyland.com/track/${repair.ticketNumber}`;
 
   return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: `
-        @media print {
-          @page { margin: 0; size: A4; }
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .no-print { display: none !important; }
-        }
-      `}} />
-      <div className="bg-gray-100 min-h-screen py-10 print:bg-white print:py-0">
-        <ReceiptPrintLayout repair={repair} config={config} />
+    <div className="h-screen w-full flex flex-col bg-gray-100">
+      <div className="bg-white border-b px-6 py-4 flex justify-between items-center shrink-0">
+        <Link href={`/repairs/${id}`} className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-black transition">
+          <ArrowLeft className="w-4 h-4" /> Zurück zum Ticket
+        </Link>
+        <div className="font-bold">Ticket: {repair.ticketNumber}</div>
       </div>
-
-      <div className="text-center mt-4 mb-10 no-print font-sans">
-        <button 
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow font-medium"
-        >
-          Die Seite wird beim Laden automatisch gedruckt.
-        </button>
+      
+      <div className="flex-1 w-full p-4 md:p-8">
+        <PrintViewerClient 
+          repairData={repair}
+          qrCodeUrl={qrCodeUrl}
+          decryptedPassword={decryptedPassword}
+          decryptedPin={decryptedPin}
+          decryptedPattern={decryptedPattern}
+        />
       </div>
-
-      <script dangerouslySetInnerHTML={{ __html: 'window.onload = function() { window.print(); }' }} />
-    </>
+    </div>
   );
 }

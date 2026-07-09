@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma, RepairStatus } from "@repo/database";
+import { updateCustomerLoyalty, calculateLoyaltyPoints } from "@repo/database/loyalty";
 import { revalidatePath } from "next/cache";
 
 export async function updateRepairStatus(repairId: string, newStatus: RepairStatus) {
@@ -214,6 +215,45 @@ export async function updateRepairPartQuantity(repairPartId: string, newQuantity
       return { success: true };
     });
   } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function completeRepair(repairId: string, finalPrice: number) {
+  try {
+    const repair = await prisma.repair.update({
+      where: { id: repairId },
+      data: {
+        status: "DELIVERED",
+        finalPrice,
+        customer: {
+          update: {
+            totalSpending: {
+              increment: finalPrice,
+            },
+            totalRepairs: {
+              increment: 1,
+            },
+            loyaltyPoints: {
+              increment: calculateLoyaltyPoints(finalPrice),
+            },
+          },
+        },
+      },
+      include: { customer: true },
+    });
+
+    // Check if customer should be upgraded
+    await updateCustomerLoyalty(repair.customerId);
+
+    revalidatePath(`/repairs/${repairId}`);
+    revalidatePath(`/repairs`);
+    revalidatePath(`/dashboard`);
+    revalidatePath(`/customers/${repair.customerId}`);
+    
+    return { success: true, repair };
+  } catch (error: any) {
+    console.error("Failed to complete repair:", error);
     return { success: false, error: error.message };
   }
 }
