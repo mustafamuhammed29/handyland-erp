@@ -1,12 +1,16 @@
 import React from "react";
 import { prisma } from "@repo/database";
 import Link from "next/link";
-import { format } from "date-fns";
-import { de } from "date-fns/locale";
-import { Search, Filter, MoreHorizontal, Eye } from "lucide-react";
+import { List, Kanban, Plus } from "lucide-react";
 import { RepairsTableClient } from "../../../components/repairs/RepairsTableClient";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../../api/auth/[...nextauth]/route";
+
+export const dynamic = "force-dynamic";
 
 export default async function RepairsPage() {
+  const session = await getServerSession(authOptions);
+
   const repairs = await prisma.repair.findMany({
     orderBy: { createdAt: "desc" },
     include: {
@@ -26,44 +30,31 @@ export default async function RepairsPage() {
     },
   }));
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "NEW": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
-      case "DIAGNOSING": return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
-      case "WAITING_FOR_PARTS": return "bg-orange-500/10 text-orange-500 border-orange-500/20";
-      case "IN_REPAIR": return "bg-purple-500/10 text-purple-500 border-purple-500/20";
-      case "QUALITY_CHECK": return "bg-indigo-500/10 text-indigo-500 border-indigo-500/20";
-      case "READY_FOR_PICKUP": return "bg-green-500/10 text-green-500 border-green-500/20";
-      case "DELIVERED": return "bg-zinc-500/10 text-zinc-500 border-zinc-500/20";
-      case "CANCELLED": return "bg-red-500/10 text-red-500 border-red-500/20";
-      default: return "bg-zinc-500/10 text-zinc-500 border-zinc-500/20";
-    }
-  };
-
-  const translateStatus = (status: string) => {
-    switch (status) {
-      case "NEW": return "Neu";
-      case "DIAGNOSING": return "Diagnose";
-      case "WAITING_FOR_PARTS": return "Wartet auf Teile";
-      case "IN_REPAIR": return "In Reparatur";
-      case "QUALITY_CHECK": return "Qualitätskontrolle";
-      case "READY_FOR_PICKUP": return "Abholbereit";
-      case "DELIVERED": return "Abgeschlossen";
-      case "CANCELLED": return "Storniert";
-      default: return status;
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-display font-bold">Reparaturen</h1>
-          <p className="text-muted-foreground mt-1">Verwalten Sie alle eingehenden Reparaturaufträge.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Reparaturen</h1>
+          <p className="text-muted-foreground">Alle Reparaturaufträge im Überblick.</p>
         </div>
-        <button className="bg-accent text-accent-foreground px-4 py-2 rounded-lg font-medium shadow-sm hover:opacity-90 transition-opacity">
-          Neue Reparatur
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="bg-muted p-1 rounded-lg flex gap-1">
+            <span className="px-3 py-1.5 text-sm font-medium bg-background shadow-sm text-foreground rounded-md flex items-center gap-2">
+              <List className="w-4 h-4" /> Liste
+            </span>
+            <Link href="/repairs/board" className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md transition-colors flex items-center gap-2">
+              <Kanban className="w-4 h-4" /> Board
+            </Link>
+          </div>
+          {session?.user?.role !== "TECHNICIAN" && (
+            <Link 
+              href="/repairs/new" 
+              className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> Neue Reparatur
+            </Link>
+          )}
+        </div>
       </div>
 
       <RepairsTableClient initialRepairs={serializedRepairs} />

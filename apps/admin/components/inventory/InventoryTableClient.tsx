@@ -4,6 +4,7 @@ import React, { useState, useTransition } from "react";
 import { Search, Plus, Trash2, Edit, AlertTriangle, Package } from "lucide-react";
 import { deleteParts, createPart, updatePart, updateStock } from "../../app/actions/inventory";
 import { useRouter } from "next/navigation";
+import { getPartTransactions } from "../../app/actions/transactions";
 
 type Part = any; // Serialized part
 
@@ -16,6 +17,9 @@ export function InventoryTableClient({ initialParts }: { initialParts: Part[] })
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPart, setEditingPart] = useState<Part | null>(null);
+  const [activeModalTab, setActiveModalTab] = useState<"edit" | "history">("edit");
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
   const [formData, setFormData] = useState({
     name: "", category: "", sku: "", quantity: 0, minQuantity: 5, price: "", cost: "", location: ""
   });
@@ -70,18 +74,29 @@ export function InventoryTableClient({ initialParts }: { initialParts: Part[] })
 
   const openAddModal = () => {
     setEditingPart(null);
+    setActiveModalTab("edit");
+    setTransactions([]);
     setFormData({ name: "", category: "", sku: "", quantity: 0, minQuantity: 5, price: "", cost: "", location: "" });
     setIsModalOpen(true);
   };
 
-  const openEditModal = (part: Part) => {
+  const openEditModal = async (part: Part) => {
     setEditingPart(part);
+    setActiveModalTab("edit");
     setFormData({
       name: part.name, category: part.category || "", sku: part.sku || "", 
       quantity: part.quantity, minQuantity: part.minQuantity, 
       price: part.price.toString(), cost: part.cost?.toString() || "", location: part.location || ""
     });
     setIsModalOpen(true);
+    
+    // Fetch transactions asynchronously
+    setIsLoadingTransactions(true);
+    const res = await getPartTransactions(part.id);
+    if (res.success) {
+      setTransactions(res.transactions);
+    }
+    setIsLoadingTransactions(false);
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -249,10 +264,30 @@ export function InventoryTableClient({ initialParts }: { initialParts: Part[] })
       {/* Add/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-card w-full max-w-lg rounded-xl shadow-xl border p-6 m-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-card w-full max-w-2xl rounded-xl shadow-xl border p-6 m-4 max-h-[90vh] overflow-hidden flex flex-col">
             <h2 className="text-xl font-bold mb-4">{editingPart ? "Teil bearbeiten" : "Neues Teil hinzufügen"}</h2>
-            <form onSubmit={handleSave} className="space-y-4">
-              <div className="space-y-2">
+            
+            {editingPart && (
+              <div className="flex gap-4 border-b mb-4">
+                <button 
+                  onClick={() => setActiveModalTab("edit")}
+                  className={`pb-2 font-medium text-sm transition-colors ${activeModalTab === "edit" ? "border-b-2 border-foreground text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  Details
+                </button>
+                <button 
+                  onClick={() => setActiveModalTab("history")}
+                  className={`pb-2 font-medium text-sm transition-colors ${activeModalTab === "history" ? "border-b-2 border-foreground text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  Historie
+                </button>
+              </div>
+            )}
+
+            <div className="overflow-y-auto flex-1 pb-4">
+              {activeModalTab === "edit" || !editingPart ? (
+                <form id="partForm" onSubmit={handleSave} className="space-y-4">
+                  <div className="space-y-2">
                 <label htmlFor="name" className="text-sm font-medium">Name <span className="text-red-500">*</span></label>
                 <input
                   id="name"
@@ -344,7 +379,49 @@ export function InventoryTableClient({ initialParts }: { initialParts: Part[] })
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
+              </form>
+              ) : (
+                <div className="space-y-3">
+                  {isLoadingTransactions ? (
+                    <p className="text-sm text-muted-foreground">Lade Historie...</p>
+                  ) : transactions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Keine Transaktionen gefunden.</p>
+                  ) : (
+                    <table className="w-full text-sm text-left border rounded-lg overflow-hidden">
+                      <thead className="bg-muted/50 border-b">
+                        <tr>
+                          <th className="px-3 py-2 font-medium">Datum</th>
+                          <th className="px-3 py-2 font-medium">Typ</th>
+                          <th className="px-3 py-2 font-medium text-right">Menge</th>
+                          <th className="px-3 py-2 font-medium">Benutzer</th>
+                          <th className="px-3 py-2 font-medium">Referenz / Notiz</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {transactions.map(t => (
+                          <tr key={t.id} className="hover:bg-muted/30">
+                            <td className="px-3 py-2 text-muted-foreground">
+                              {new Date(t.createdAt).toLocaleDateString("de-DE")} {new Date(t.createdAt).toLocaleTimeString("de-DE", { hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                            <td className="px-3 py-2">{t.type}</td>
+                            <td className={`px-3 py-2 text-right font-medium ${t.quantityChange > 0 ? "text-green-600" : "text-red-600"}`}>
+                              {t.quantityChange > 0 ? "+" : ""}{t.quantityChange}
+                            </td>
+                            <td className="px-3 py-2">{t.staffName}</td>
+                            <td className="px-3 py-2 text-muted-foreground text-xs">
+                              {t.reference && <span className="font-semibold block">{t.reference}</span>}
+                              {t.notes}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
+            </div>
 
+            {activeModalTab === "edit" && (
               <div className="flex justify-end gap-3 pt-4 border-t mt-4">
                 <button
                   type="button"
@@ -355,13 +432,14 @@ export function InventoryTableClient({ initialParts }: { initialParts: Part[] })
                 </button>
                 <button
                   type="submit"
+                  form="partForm"
                   disabled={isPending}
                   className="px-4 py-2 bg-foreground text-background rounded-lg hover:opacity-90 transition-opacity font-medium disabled:opacity-50"
                 >
                   {isPending ? "Speichern..." : "Speichern"}
                 </button>
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}

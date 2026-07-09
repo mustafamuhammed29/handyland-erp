@@ -95,6 +95,10 @@ model Repair {
   assignedToId    String?
   assignedTo      Staff?    @relation(fields: [assignedToId], references: [id])
   
+  // Parts & Inventory
+  parts           RepairPart[]
+  inventoryTransactions InventoryTransaction[]
+  
   // Security (encrypted)
   devicePasswordEncrypted  String?
   devicePatternEncrypted   String?
@@ -265,6 +269,7 @@ model Staff {
   auditLogs   AuditLog[]
   repairNotes RepairNote[]
   customerNotes CustomerNote[]
+  inventoryTransactions InventoryTransaction[]
 }
 
 enum StaffRole {
@@ -362,21 +367,165 @@ model ShopSettings {
 }
 
 // ===== INVENTORY =====
+model Supplier {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  name        String
+  phone       String?
+  email       String?
+  website     String?
+  address     String?
+  notes       String?
+  
+  parts       Part[]
+  purchaseOrders PurchaseOrder[]
+}
+
 model Part {
   id          String   @id @default(cuid())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   name        String
-  category    String?  // e.g., "Display", "Akku"
+  category    String?  // e.g., "Display", "Battery", "Case"
   sku         String?  @unique
+  brand       String?  // e.g., "Apple", "Samsung"
+  deviceModel String?  // e.g., "iPhone 13 Pro"
+  quality     String?  // e.g., "Original", "OEM", "Copy"
+  color       String?  // e.g., "Black", "Silver"
+  
   quantity    Int      @default(0)
   minQuantity Int      @default(5)
+  state       PartState @default(AVAILABLE)
+  
   price       Decimal  @db.Decimal(10,2) // Selling price
   cost        Decimal? @db.Decimal(10,2) // Purchasing cost
   location    String?  // e.g., "Regal A1"
   
+  supplierId  String?
+  supplier    Supplier? @relation(fields: [supplierId], references: [id])
+  
+  transactions InventoryTransaction[]
+  purchaseItems PurchaseOrderItem[]
+  repairParts   RepairPart[]
+  
   @@index([category])
+  @@index([brand, deviceModel])
+  @@index([supplierId])
+}
+
+enum PartState {
+  AVAILABLE
+  RESERVED
+  DAMAGED
+  ORDERED
+  RECEIVED
+  CONSUMED
+}
+
+model InventoryTransaction {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  
+  partId      String
+  part        Part     @relation(fields: [partId], references: [id])
+  
+  type        TransactionType
+  quantityChange Int      // Positive for stock in, negative for stock out
+  previousQuantity Int
+  newQuantity Int
+  
+  staffId     String?
+  staff       Staff?    @relation(fields: [staffId], references: [id])
+  
+  // Optional links to source
+  repairId    String?
+  repair      Repair?   @relation(fields: [repairId], references: [id])
+  purchaseOrderId String?
+  purchaseOrder PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+  
+  notes       String?
+  
+  @@index([partId])
+  @@index([createdAt])
+}
+
+enum TransactionType {
+  PURCHASE           // Stock in from supplier
+  REPAIR_CONSUMPTION // Stock out used in repair
+  DIRECT_SALE        // Stock out direct sale
+  MANUAL_ADJUSTMENT  // Stock manual adjust (in/out)
+  RETURN_TO_STOCK    // Stock returned from repair or sale
+  SUPPLIER_RECEIPT   // Stock received from purchase order
+}
+
+model RepairPart {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  
+  repairId    String
+  repair      Repair   @relation(fields: [repairId], references: [id], onDelete: Cascade)
+  partId      String
+  part        Part     @relation(fields: [partId], references: [id])
+  
+  quantity    Int      @default(1)
+  price       Decimal  @db.Decimal(10,2) // Price charged to customer at that time
+  cost        Decimal? @db.Decimal(10,2) // Cost at that time
+  
+  @@index([repairId])
+  @@index([partId])
+}
+
+model PurchaseOrder {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  orderNumber String   @unique // e.g. PO-2026-0001
+  
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+  
+  status      PurchaseOrderStatus @default(DRAFT)
+  orderedAt   DateTime?
+  expectedAt  DateTime?
+  receivedAt  DateTime?
+  
+  items       PurchaseOrderItem[]
+  transactions InventoryTransaction[]
+  
+  notes       String?
+  
+  @@index([supplierId])
+  @@index([status])
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  ORDERED
+  PARTIALLY_RECEIVED
+  DELIVERED
+  CANCELLED
+}
+
+model PurchaseOrderItem {
+  id              String   @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  
+  partId          String?
+  part            Part?    @relation(fields: [partId], references: [id])
+  
+  partName        String   // Snapshot in case part is deleted or ad-hoc
+  quantity        Int
+  receivedQuantity Int     @default(0)
+  
+  cost            Decimal? @db.Decimal(10,2)
+  notes           String?
+  
+  @@index([purchaseOrderId])
 }
 
 // ===== CUSTOMER PART ORDERS =====

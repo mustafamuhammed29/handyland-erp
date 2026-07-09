@@ -7,8 +7,8 @@ import { ArrowLeft, User, Smartphone, AlertCircle, Wrench, ShieldCheck, History,
 import StatusSelect from "./StatusSelect";
 import PriceEditor from "./PriceEditor";
 import { PrintButton } from "../../../../components/repairs/PrintButton";
-
 import { PatternDisplay } from "../../../../components/repairs/PatternDisplay";
+import { RepairPartsEditor } from "../../../../components/repairs/RepairPartsEditor";
 
 export default async function RepairDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -20,6 +20,9 @@ export default async function RepairDetailPage({ params }: { params: Promise<{ i
       device: true,
       issues: true,
       conditionItems: true,
+      repairParts: {
+        include: { part: true }
+      },
       statusHistory: {
         orderBy: { createdAt: "desc" }
       }
@@ -38,6 +41,12 @@ export default async function RepairDetailPage({ params }: { params: Promise<{ i
       issues: true,
     },
     orderBy: { createdAt: "desc" }
+  });
+
+  const availableParts = await prisma.part.findMany({
+    where: { quantity: { gt: 0 } },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, quantity: true, price: true }
   });
 
   const translateIssue = (type: string) => {
@@ -253,6 +262,18 @@ export default async function RepairDetailPage({ params }: { params: Promise<{ i
         {/* Right Column (Sidebar) */}
         <div className="space-y-6">
           
+          <RepairPartsEditor 
+            repairId={repair.id}
+            availableParts={availableParts.map(p => ({ ...p, price: Number(p.price) }))}
+            assignedParts={repair.repairParts.map(rp => ({
+              id: rp.id,
+              partId: rp.partId,
+              quantity: rp.quantity,
+              price: Number(rp.price),
+              part: { name: rp.part.name, quantity: rp.part.quantity }
+            }))}
+          />
+
           {/* Price Calculator */}
           <PriceEditor 
             repairId={repair.id} 

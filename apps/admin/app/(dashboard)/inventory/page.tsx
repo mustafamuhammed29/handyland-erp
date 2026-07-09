@@ -95,7 +95,7 @@ export default async function InventoryPage({
       </div>
 
       {/* Tab Switcher */}
-      <TabSwitcher activeTab={activeTab} />
+      <TabSwitcher />
 
       {/* Tab Content */}
       {activeTab === "orders" ? (

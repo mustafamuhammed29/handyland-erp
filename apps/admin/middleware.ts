@@ -1,36 +1,44 @@
-import { getToken } from "next-auth/jwt";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { withAuth } from "next-auth/middleware";
+import { NextResponse } from "next/ NextResponse";
 
-export async function middleware(req: NextRequest) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET || "handyland-secret-key-change-in-production" });
-  
-  const isAuthPage = req.nextUrl.pathname.startsWith("/login");
-  const isApiAuthRoute = req.nextUrl.pathname.startsWith("/api/auth");
-  const isPublicRoute = req.nextUrl.pathname.startsWith("/_next") || req.nextUrl.pathname.startsWith("/favicon");
+export default withAuth(
+  function middleware(req) {
+    const { pathname } = req.nextUrl;
+    const token = req.nextauth.token;
 
-  if (isApiAuthRoute || isPublicRoute) {
-    return NextResponse.next();
-  }
-
-  if (isAuthPage) {
-    if (token) {
+    // Root redirect
+    if (pathname === "/") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
-    return NextResponse.next();
-  }
 
-  if (!token) {
-    let from = req.nextUrl.pathname;
-    if (req.nextUrl.search) {
-      from += req.nextUrl.search;
+    // Role-based route protection
+    // Only OWNER and MANAGER can access /settings and /analytics
+    if (pathname.startsWith("/settings") || pathname.startsWith("/analytics")) {
+      if (token?.role !== "OWNER" && token?.role !== "MANAGER") {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
     }
-    return NextResponse.redirect(new URL(`/login?from=${encodeURIComponent(from)}`, req.url));
+  },
+  {
+    callbacks: {
+      authorized: ({ token }) => !!token,
+    },
+    pages: {
+      signIn: "/login",
+    }
   }
-
-  return NextResponse.next();
-}
+);
 
 export const config = {
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - login (login page)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico|login).*)",
+  ],
 };
