@@ -89,7 +89,7 @@ export default async function InventoryPage({
   }));
   const serializedSuppliers = suppliers.map((s) => ({ id: s.id, name: s.name }));
 
-  const lowStockParts = serializedParts.filter((p) => p.quantity <= p.minQuantity);
+  const lowStockParts = serializedParts.filter((p) => p.quantity < p.minQuantity);
 
   // Stats
   const pendingOrders = partOrders.filter((o) => o.status === "PENDING" || o.status === "ORDERED").length;

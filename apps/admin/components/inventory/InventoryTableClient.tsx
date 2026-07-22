@@ -1,7 +1,22 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
-import { Search, Plus, Trash2, Edit, AlertTriangle, Package, PackagePlus, Tag, Smartphone, Filter, Layers } from "lucide-react";
+import React, { useState, useEffect, useTransition, useMemo } from "react";
+import {
+  Search,
+  Plus,
+  Trash2,
+  Edit,
+  AlertTriangle,
+  Package,
+  PackagePlus,
+  Tag,
+  Smartphone,
+  Filter,
+  Layers,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+} from "lucide-react";
 import { deleteParts, createPart, updatePart, updateStock, createCategory, createDeviceModel } from "../../app/actions/inventory";
 import { useRouter } from "next/navigation";
 import { getPartTransactions } from "../../app/actions/transactions";
@@ -32,6 +47,16 @@ interface SupplierItem {
   name: string;
 }
 
+interface ModelGroup {
+  key: string;
+  modelName: string;
+  brandName: string;
+  deviceModelId?: string | null;
+  parts: Part[];
+  hasLowStock: boolean;
+  totalStock: number;
+}
+
 export function InventoryTableClient({
   initialParts,
   brands = [],
@@ -60,6 +85,10 @@ export function InventoryTableClient({
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("ALL");
   const [selectedModelFilter, setSelectedModelFilter] = useState<string>("ALL");
 
+  // Accordion Expansion State & Pagination
+  const [expandedGroupKeys, setExpandedGroupKeys] = useState<Set<string>>(new Set());
+  const [visibleGroupCount, setVisibleGroupCount] = useState<number>(15);
+
   // Stock-In Modal State
   const [isStockInOpen, setIsStockInOpen] = useState(false);
   const [stockInPartId, setStockInPartId] = useState<string | null>(null);
@@ -84,7 +113,7 @@ export function InventoryTableClient({
     deviceModel: "",
     sku: "",
     quantity: 0,
-    minQuantity: 5,
+    minQuantity: 1,
     price: "",
     cost: "",
     location: "",
@@ -118,45 +147,107 @@ export function InventoryTableClient({
         return m.brandId === selectedFormBrandId || (brandObj && m.brand.toLowerCase() === brandObj.name.toLowerCase());
       });
 
-  // Filter Logic with Safe Defaults
-  const filteredParts = initialParts.filter((part) => {
-    const searchString = searchQuery.toLowerCase();
-    const matchesSearch =
-      part.name.toLowerCase().includes(searchString) ||
-      (part.sku && part.sku.toLowerCase().includes(searchString)) ||
-      (part.category && part.category.toLowerCase().includes(searchString)) ||
-      (part.brand && part.brand.toLowerCase().includes(searchString)) ||
-      (part.deviceModel && part.deviceModel.toLowerCase().includes(searchString)) ||
-      (part.location && part.location.toLowerCase().includes(searchString));
+  // Filter Parts with Safe Defaults
+  const filteredParts = useMemo(() => {
+    return initialParts.filter((part) => {
+      const searchString = searchQuery.toLowerCase();
+      const matchesSearch =
+        part.name.toLowerCase().includes(searchString) ||
+        (part.sku && part.sku.toLowerCase().includes(searchString)) ||
+        (part.category && part.category.toLowerCase().includes(searchString)) ||
+        (part.brand && part.brand.toLowerCase().includes(searchString)) ||
+        (part.deviceModel && part.deviceModel.toLowerCase().includes(searchString)) ||
+        (part.location && part.location.toLowerCase().includes(searchString));
 
-    if (!matchesSearch) return false;
+      if (!matchesSearch) return false;
 
-    // Brand Filter
-    if (selectedBrandFilter !== "ALL") {
-      const brandObj = brandList.find((b) => b.id === selectedBrandFilter);
-      const targetBrandName = brandObj ? brandObj.name.toLowerCase() : "";
-      const partBrand = (part.brand || "").toLowerCase();
-      if (partBrand !== targetBrandName) return false;
-    }
+      // Brand Filter
+      if (selectedBrandFilter !== "ALL") {
+        const brandObj = brandList.find((b) => b.id === selectedBrandFilter);
+        const targetBrandName = brandObj ? brandObj.name.toLowerCase() : "";
+        const partBrand = (part.brand || "").toLowerCase();
+        if (partBrand !== targetBrandName) return false;
+      }
 
-    // Category Filter
-    if (selectedCategoryFilter !== "ALL") {
-      const catObj = categoryList.find((c) => c.id === selectedCategoryFilter);
-      const targetCatName = catObj ? catObj.name.toLowerCase() : "";
-      const partCat = (part.category || "").toLowerCase();
-      if (partCat !== targetCatName && part.categoryId !== selectedCategoryFilter) return false;
-    }
+      // Category Filter
+      if (selectedCategoryFilter !== "ALL") {
+        const catObj = categoryList.find((c) => c.id === selectedCategoryFilter);
+        const targetCatName = catObj ? catObj.name.toLowerCase() : "";
+        const partCat = (part.category || "").toLowerCase();
+        if (partCat !== targetCatName && part.categoryId !== selectedCategoryFilter) return false;
+      }
 
-    // Model Filter
-    if (selectedModelFilter !== "ALL") {
-      const modelObj = deviceModelList.find((m) => m.id === selectedModelFilter);
-      const targetModelName = modelObj ? modelObj.modelName.toLowerCase() : "";
-      const partModel = (part.deviceModel || "").toLowerCase();
-      if (partModel !== targetModelName && part.deviceModelId !== selectedModelFilter) return false;
-    }
+      // Model Filter
+      if (selectedModelFilter !== "ALL") {
+        const modelObj = deviceModelList.find((m) => m.id === selectedModelFilter);
+        const targetModelName = modelObj ? modelObj.modelName.toLowerCase() : "";
+        const partModel = (part.deviceModel || "").toLowerCase();
+        if (partModel !== targetModelName && part.deviceModelId !== selectedModelFilter) return false;
+      }
 
-    return true;
-  });
+      return true;
+    });
+  }, [initialParts, searchQuery, selectedBrandFilter, selectedCategoryFilter, selectedModelFilter, brandList, categoryList, deviceModelList]);
+
+  // Group Parts by Device Model
+  const modelGroups: ModelGroup[] = useMemo(() => {
+    const groupsMap = new Map<string, ModelGroup>();
+
+    filteredParts.forEach((part) => {
+      const modelName = part.deviceModel || "Andere / Ohne Modell";
+      const brandName = part.brand || "Allgemein";
+      const groupKey = `${brandName}___${modelName}`;
+
+      const isPartLowStock = part.quantity < part.minQuantity;
+
+      if (!groupsMap.has(groupKey)) {
+        groupsMap.set(groupKey, {
+          key: groupKey,
+          modelName,
+          brandName,
+          deviceModelId: part.deviceModelId,
+          parts: [],
+          hasLowStock: false,
+          totalStock: 0,
+        });
+      }
+
+      const grp = groupsMap.get(groupKey)!;
+      grp.parts.push(part);
+      grp.totalStock += part.quantity;
+      if (isPartLowStock) {
+        grp.hasLowStock = true;
+      }
+    });
+
+    return Array.from(groupsMap.values());
+  }, [filteredParts]);
+
+  // Auto-Expand Logic: Auto-expand groups containing low stock items OR when a search query is active
+  useEffect(() => {
+    const initialExpanded = new Set<string>();
+    const isSearchOrFilterActive = searchQuery.trim() !== "" || selectedModelFilter !== "ALL" || selectedCategoryFilter !== "ALL";
+
+    modelGroups.forEach((group) => {
+      if (group.hasLowStock || isSearchOrFilterActive) {
+        initialExpanded.add(group.key);
+      }
+    });
+
+    setExpandedGroupKeys(initialExpanded);
+  }, [modelGroups, searchQuery, selectedModelFilter, selectedCategoryFilter]);
+
+  const toggleGroupExpand = (groupKey: string) => {
+    setExpandedGroupKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupKey)) {
+        next.delete(groupKey);
+      } else {
+        next.add(groupKey);
+      }
+      return next;
+    });
+  };
 
   const toggleSelectAll = () => {
     if (selectedIds.size === filteredParts.length && filteredParts.length > 0) {
@@ -209,7 +300,7 @@ export function InventoryTableClient({
       deviceModel: "",
       sku: "",
       quantity: 0,
-      minQuantity: 5,
+      minQuantity: 1,
       price: "",
       cost: "",
       location: "",
@@ -240,7 +331,7 @@ export function InventoryTableClient({
       deviceModel: part.deviceModel || "",
       sku: part.sku || "",
       quantity: part.quantity || 0,
-      minQuantity: part.minQuantity || 5,
+      minQuantity: part.minQuantity ?? 1,
       price: part.price || "",
       cost: part.cost || "",
       location: part.location || "",
@@ -322,6 +413,8 @@ export function InventoryTableClient({
       }
     });
   };
+
+  const visibleGroups = modelGroups.slice(0, visibleGroupCount);
 
   return (
     <div className="space-y-4">
@@ -427,20 +520,38 @@ export function InventoryTableClient({
             >
               <option value="ALL">Alle Kategorien</option>
               {categoryList.map((c) => (
-                <option key={c.id} value={c.id}>
+                <option key={c.id} value={c.name}>
                   {c.name}
                 </option>
               ))}
             </select>
           </div>
 
+          {/* Expand / Collapse All Controls */}
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={() => setExpandedGroupKeys(new Set(modelGroups.map((g) => g.key)))}
+              className="text-[11px] text-muted-foreground hover:text-foreground underline"
+            >
+              Alle ausklappen
+            </button>
+            <span className="text-muted-foreground/40">|</span>
+            <button
+              onClick={() => setExpandedGroupKeys(new Set())}
+              className="text-[11px] text-muted-foreground hover:text-foreground underline"
+            >
+              Alle einklappen
+            </button>
+          </div>
+
           {/* Reset Filters */}
-          {(selectedBrandFilter !== "ALL" || selectedCategoryFilter !== "ALL" || selectedModelFilter !== "ALL") && (
+          {(selectedBrandFilter !== "ALL" || selectedCategoryFilter !== "ALL" || selectedModelFilter !== "ALL" || searchQuery.trim() !== "") && (
             <button
               onClick={() => {
                 setSelectedBrandFilter("ALL");
                 setSelectedCategoryFilter("ALL");
                 setSelectedModelFilter("ALL");
+                setSearchQuery("");
               }}
               className="text-accent hover:underline font-medium"
             >
@@ -450,8 +561,8 @@ export function InventoryTableClient({
         </div>
       </div>
 
-      {/* Table */}
-      <div className="border rounded-lg bg-card overflow-hidden shadow-sm">
+      {/* Accordion Grouped Table */}
+      <div className="border rounded-xl bg-card overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-muted/50 border-b">
@@ -465,7 +576,6 @@ export function InventoryTableClient({
                   />
                 </th>
                 <th className="px-4 py-3 font-medium">Teil & SKU</th>
-                <th className="px-4 py-3 font-medium">Marke & Modell</th>
                 <th className="px-4 py-3 font-medium">Kategorie</th>
                 <th className="px-4 py-3 font-medium text-right">Lagerbestand</th>
                 <th className="px-4 py-3 font-medium text-right">VK-Preis</th>
@@ -474,96 +584,173 @@ export function InventoryTableClient({
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredParts.length === 0 ? (
+              {modelGroups.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
+                  <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
                     Keine Teile gefunden.
                   </td>
                 </tr>
               ) : (
-                filteredParts.map((part) => {
-                  const isLowStock = part.quantity <= part.minQuantity;
-                  return (
-                    <tr key={part.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(part.id)}
-                          onChange={() => toggleSelect(part.id)}
-                          className="rounded border-gray-300"
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="font-semibold text-foreground">{part.name}</div>
-                        {part.sku && <div className="text-xs text-muted-foreground font-mono">SKU: {part.sku}</div>}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="text-xs">
-                          <span className="font-semibold">{part.brand || "-"}</span>
-                          {part.deviceModel && <span className="text-muted-foreground"> {part.deviceModel}</span>}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="px-2 py-0.5 rounded-full bg-muted text-xs font-medium border">
-                          {part.category || "Allgemein"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => handleQuickStockChange(part.id, -1)}
-                            disabled={part.quantity <= 0}
-                            className="w-6 h-6 rounded bg-muted hover:bg-muted/80 flex items-center justify-center text-xs disabled:opacity-30 font-bold"
-                          >
-                            -
-                          </button>
-                          <span className={`font-mono font-bold px-2 ${isLowStock ? "text-red-500" : ""}`}>
-                            {part.quantity} Stk.
-                          </span>
-                          <button
-                            onClick={() => handleQuickStockChange(part.id, 1)}
-                            className="w-6 h-6 rounded bg-muted hover:bg-muted/80 flex items-center justify-center text-xs font-bold"
-                          >
-                            +
-                          </button>
-                          {isLowStock && (
-                            <span title="Niedriger Lagerbestand">
-                              <AlertTriangle className="w-4 h-4 text-red-500 ml-1" />
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-semibold">€{Number(part.price).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right font-mono text-muted-foreground">
-                        {part.cost ? `€${Number(part.cost).toFixed(2)}` : "-"}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => {
-                            setStockInPartId(part.id);
-                            setIsStockInOpen(true);
-                          }}
-                          title="Wareneingang buchen"
-                          className="p-2 text-accent hover:bg-accent/10 rounded-lg transition-colors"
-                        >
-                          <PackagePlus className="w-4 h-4" />
-                        </button>
+                visibleGroups.map((group) => {
+                  const isExpanded = expandedGroupKeys.has(group.key);
 
-                        <button
-                          onClick={() => openEditModal(part)}
-                          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                          aria-label="Bearbeiten"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
+                  return (
+                    <React.Fragment key={group.key}>
+                      {/* Accordion Group Header Row */}
+                      <tr
+                        onClick={() => toggleGroupExpand(group.key)}
+                        className={`cursor-pointer transition-colors border-t border-b ${
+                          isExpanded ? "bg-muted/60 dark:bg-muted/40 font-bold" : "bg-muted/20 hover:bg-muted/40"
+                        }`}
+                      >
+                        <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => toggleGroupExpand(group.key)}
+                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+                          >
+                            {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                          </button>
+                        </td>
+                        <td colSpan={2} className="px-4 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className="font-display font-bold text-base text-foreground">
+                              {group.modelName}
+                            </span>
+
+                            <span className="px-2 py-0.5 rounded-full bg-background border text-xs font-semibold text-muted-foreground">
+                              {group.brandName}
+                            </span>
+
+                            <span className="px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-mono font-medium">
+                              {group.parts.length} {group.parts.length === 1 ? "Teil" : "Teile"}
+                            </span>
+
+                            {group.hasLowStock && (
+                              <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 border border-red-500/20 text-xs font-semibold flex items-center gap-1 animate-pulse">
+                                <AlertTriangle className="w-3 h-3 text-red-500 shrink-0" />
+                                Lagerwarnung
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        <td className="px-4 py-3 text-right font-mono font-bold">
+                          <span className={group.hasLowStock ? "text-red-500" : "text-muted-foreground"}>
+                            {group.totalStock} Stk. Gesamt
+                          </span>
+                        </td>
+
+                        <td colSpan={3} className="px-4 py-3 text-right text-xs text-muted-foreground font-normal">
+                          {isExpanded ? "Klicken zum Einklappen" : "Klicken zum Ausklappen"}
+                        </td>
+                      </tr>
+
+                      {/* Group Child Item Rows */}
+                      {isExpanded &&
+                        group.parts.map((part) => {
+                          const isLowStock = part.quantity < part.minQuantity;
+
+                          return (
+                            <tr key={part.id} className="hover:bg-muted/30 transition-colors bg-background/50">
+                              <td className="px-4 py-3 pl-8">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedIds.has(part.id)}
+                                  onChange={() => toggleSelect(part.id)}
+                                  className="rounded border-gray-300"
+                                />
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="font-semibold text-foreground flex items-center gap-2">
+                                  {part.name}
+                                </div>
+                                {part.sku && <div className="text-xs text-muted-foreground font-mono">SKU: {part.sku}</div>}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className="px-2 py-0.5 rounded-full bg-muted text-xs font-medium border">
+                                  {part.category || "Allgemein"}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    onClick={() => handleQuickStockChange(part.id, -1)}
+                                    disabled={part.quantity <= 0}
+                                    className="w-6 h-6 rounded bg-muted hover:bg-muted/80 flex items-center justify-center text-xs disabled:opacity-30 font-bold"
+                                  >
+                                    -
+                                  </button>
+                                  <span className={`font-mono font-bold px-2 ${isLowStock ? "text-red-500" : ""}`}>
+                                    {part.quantity} Stk.
+                                  </span>
+                                  <button
+                                    onClick={() => handleQuickStockChange(part.id, 1)}
+                                    className="w-6 h-6 rounded bg-muted hover:bg-muted/80 flex items-center justify-center text-xs font-bold"
+                                  >
+                                    +
+                                  </button>
+                                  {isLowStock && (
+                                    <span title="Niedriger Lagerbestand">
+                                      <AlertTriangle className="w-4 h-4 text-red-500 ml-1" />
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-right font-mono font-semibold">€{Number(part.price).toFixed(2)}</td>
+                              <td className="px-4 py-3 text-right font-mono text-muted-foreground">
+                                {part.cost ? `€${Number(part.cost).toFixed(2)}` : "-"}
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                <button
+                                  onClick={() => {
+                                    setStockInPartId(part.id);
+                                    setIsStockInOpen(true);
+                                  }}
+                                  title="Wareneingang buchen"
+                                  className="p-2 text-accent hover:bg-accent/10 rounded-lg transition-colors"
+                                >
+                                  <PackagePlus className="w-4 h-4" />
+                                </button>
+
+                                <button
+                                  onClick={() => openEditModal(part)}
+                                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                  aria-label="Bearbeiten"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </React.Fragment>
                   );
                 })
               )}
             </tbody>
           </table>
         </div>
+
+        {/* Group Pagination Footer / Load More */}
+        {modelGroups.length > 0 && (
+          <div className="p-4 border-t bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
+            <div>
+              Zeige <span className="font-bold text-foreground">{Math.min(visibleGroupCount, modelGroups.length)}</span> von{" "}
+              <span className="font-bold text-foreground">{modelGroups.length}</span> Gerätemodellen (
+              <span className="font-bold text-foreground">{filteredParts.length}</span> Teile insgesamt)
+            </div>
+
+            {visibleGroupCount < modelGroups.length && (
+              <button
+                onClick={() => setVisibleGroupCount((prev) => prev + 15)}
+                className="px-4 py-2 bg-foreground text-background font-semibold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5"
+              >
+                <ChevronDown className="w-4 h-4" />
+                Mehr Modelle laden (+15)
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Reusable Stock-In Modal */}
