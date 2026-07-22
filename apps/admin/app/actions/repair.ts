@@ -1,7 +1,6 @@
 "use server";
 
-import { prisma, RepairStatus } from "@repo/database";
-import { updateCustomerLoyalty, calculateLoyaltyPoints } from "@repo/database/loyalty";
+import { prisma, RepairStatus, updateCustomerLoyalty, calculateLoyaltyPoints } from "@repo/database";
 import { revalidatePath } from "next/cache";
 
 export async function updateRepairStatus(repairId: string, newStatus: RepairStatus) {

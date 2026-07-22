@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWizard } from "../../../../components/kiosk/WizardContext";
+import { useTranslations } from "next-intl";
 import { StepTransition } from "../../../../components/kiosk/StepTransition";
 import { Loader2, UserCheck, ArrowRight, ShieldCheck, ChevronDown } from "lucide-react";
 
@@ -22,6 +23,7 @@ const COUNTRY_CODES = [
 ];
 
 export default function IdentifyStep() {
+  const t = useTranslations();
   const { state, updateState, nextStep } = useWizard();
   const [countryCode, setCountryCode] = useState(() => {
     if (state.customer.phone) {
@@ -92,7 +94,7 @@ export default function IdentifyStep() {
       }
     } catch (err) {
       console.error(err);
-      setError("Fehler bei der Kundensuche.");
+      setError(t("errors.searchFailed", { fallback: "Fehler bei der Kundensuche." }));
     } finally {
       setIsSearching(false);
     }
@@ -100,7 +102,7 @@ export default function IdentifyStep() {
 
   const handleContinue = () => {
     if (phone.length < 6) {
-      setError("Bitte geben Sie eine gültige Telefonnummer ein.");
+      setError(t("errors.invalidPhone", { fallback: "Bitte geben Sie eine gültige Telefonnummer ein." }));
       return;
     }
     updateState({
@@ -116,10 +118,10 @@ export default function IdentifyStep() {
     <StepTransition stepIndex={0}>
       <div className="space-y-4 text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-display font-medium text-white">
-          Willkommen bei <span className="text-[var(--color-primary)]">HANDYLAND</span>
+          {t("common.welcome", { fallback: "Willkommen bei" })} <span className="text-[var(--color-primary)]">HANDYLAND</span>
         </h1>
         <p className="text-lg text-white/60">
-          Bitte geben Sie Ihre Telefonnummer ein, um zu beginnen.
+          {t("common.enterPhone", { fallback: "Bitte geben Sie Ihre Telefonnummer ein, um zu beginnen." })}
         </p>
       </div>
 
@@ -134,7 +136,8 @@ export default function IdentifyStep() {
               aria-label="Ländervorwahl"
               value={countryCode}
               onChange={(e) => setCountryCode(e.target.value)}
-              className="appearance-none w-full bg-[var(--color-surface)] border border-white/10 rounded-2xl pl-4 pr-10 py-5 text-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all shadow-lg cursor-pointer"
+              dir="ltr"
+              className="appearance-none w-full bg-[var(--color-surface)] border border-white/10 rounded-2xl pl-4 pr-10 py-5 text-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all shadow-lg cursor-pointer text-left ltr"
             >
               {COUNTRY_CODES.map((c) => (
                 <option key={c.code} value={c.code} className="bg-[#1a1a1a] text-white">
@@ -158,7 +161,8 @@ export default function IdentifyStep() {
                 setError("");
               }}
               placeholder="176 1234567"
-              className="w-full bg-[var(--color-surface)] border border-white/10 rounded-2xl px-6 py-5 text-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all shadow-lg"
+              dir="ltr"
+              className="w-full bg-[var(--color-surface)] border border-white/10 rounded-2xl px-6 py-5 text-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all shadow-lg text-left ltr"
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
@@ -195,13 +199,13 @@ export default function IdentifyStep() {
                 <UserCheck className="w-6 h-6 text-[var(--color-primary)]" />
               </div>
               <h3 className="text-xl font-medium text-white">
-                Willkommen zurück, {customerFound.firstName}! 👋
+                {t("common.welcomeBack", { fallback: "Willkommen zurück" })}, {customerFound.firstName}! 👋
               </h3>
               <div className="flex items-center justify-center gap-2 text-sm text-white/60">
                 <ShieldCheck className="w-4 h-4 text-[var(--color-primary)]" />
                 <span>Loyalty: {customerFound.loyaltyTier}</span>
                 <span className="w-1 h-1 rounded-full bg-white/20 mx-1" />
-                <span>{customerFound.totalRepairs} Reparaturen</span>
+                <span>{customerFound.totalRepairs} {t("common.repairs", { fallback: "Reparaturen" })}</span>
               </div>
             </motion.div>
           )}
@@ -213,7 +217,7 @@ export default function IdentifyStep() {
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               className="text-center text-white/60 py-4"
             >
-              Neuer Kunde. Wir werden Ihre Daten im nächsten Schritt aufnehmen.
+              {t("common.newCustomer", { fallback: "Neuer Kunde. Wir werden Ihre Daten im nächsten Schritt aufnehmen." })}
             </motion.div>
           )}
         </AnimatePresence>
@@ -226,8 +230,8 @@ export default function IdentifyStep() {
             disabled={isSearching || phone.length < 8}
             className="w-full bg-[var(--color-primary)] text-black font-medium text-lg py-5 rounded-2xl flex items-center justify-center gap-2 hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(245,197,24,0.3)]"
           >
-            Weiter
-            <ArrowRight className="w-5 h-5" />
+            {t("common.next")}
+            <ArrowRight className="w-5 h-5 rtl:rotate-180" />
           </motion.button>
         </div>
       </div>

@@ -1,0 +1,138 @@
+{
+  "steps": {
+    "language": "Choose Language",
+    "identify": "Identification",
+    "personal": "Personal Data",
+    "device": "Device Information",
+    "security": "Security",
+    "problem": "Problem Description",
+    "condition": "Condition Check",
+    "accessories": "Accessories",
+    "history": "Repair History",
+    "signature": "Signature & Terms",
+    "confirmation": "Confirmation"
+  },
+  "common": {
+    "next": "Next",
+    "back": "Back",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "welcome": "Welcome to",
+    "enterPhone": "Please enter your phone number to begin.",
+    "welcomeBack": "Welcome back",
+    "newCustomer": "New customer. We will collect your details in the next step.",
+    "repairs": "Repairs",
+    "photoAdded": "Photo added (Take again)",
+    "takePhoto": "Take a photo of the device (Optional)",
+    "submitting": "Data is being securely transmitted...",
+    "errorContact": "Please contact a staff member at the reception.",
+    "stepOf": "Step {current} of {total}",
+    "footer": "© {year} HANDYLAND Repair Center",
+    "securityInfo": "Your data is stored securely and encrypted, and is only used by our technicians for the repair."
+  },
+  "personal": {
+    "title": "Personal Data",
+    "subtitle": "How should we address you?",
+    "firstName": "First Name *",
+    "firstNamePlaceholder": "John",
+    "firstNameErr": "First name is required",
+    "lastName": "Last Name *",
+    "lastNamePlaceholder": "Doe",
+    "lastNameErr": "Last name is required",
+    "email": "Email Address (Optional)",
+    "emailPlaceholder": "john@example.com"
+  },
+  "device": {
+    "title": "Device Information",
+    "subtitle": "Which device would you like us to repair?",
+    "brand": "Manufacturer *",
+    "selectBrand": "Select manufacturer",
+    "customBrand": "Other Manufacturer",
+    "model": "Model *",
+    "modelPlaceholder": "e.g. iPhone 13 Pro",
+    "modelErr": "Model is required",
+    "imei": "IMEI / Serial Number (Optional)",
+    "imeiPlaceholder": "For warranty & tracking",
+    "noModelWarning": "Please enter a model"
+  },
+  "security": {
+    "title": "Security",
+    "subtitle": "Credentials for functional testing",
+    "noPassword": "No password / Unknown",
+    "passCode": "Device Password (PIN/Code)",
+    "passCodePlaceholder": "123456",
+    "pattern": "Unlock Pattern",
+    "patternHint": "Draw your pattern",
+    "simPin": "SIM PIN (Optional)",
+    "simPinPlaceholder": "0000",
+    "resetPattern": "Reset"
+  },
+  "problem": {
+    "title": "Problem Description",
+    "subtitle": "What is broken on your device?",
+    "descriptionLabel": "Please describe the problem as accurately as possible:",
+    "descriptionPlaceholder": "e.g. The screen shattered after a fall and the touchscreen is partially unresponsive...",
+    "quickTags": "Quick select:",
+    "tagDISPLAY": "Display / Screen",
+    "tagBATTERY": "Battery",
+    "tagCHARGING_PORT": "Charging Port",
+    "tagSPEAKER": "Speaker",
+    "tagEARPIECE": "Earpiece",
+    "tagMICROPHONE": "Microphone",
+    "tagCAMERA": "Camera",
+    "tagWATER_DAMAGE": "Water Damage",
+    "tagBACK_COVER": "Back Cover",
+    "tagSOFTWARE": "Software Problem",
+    "tagUNLOCKING": "Unlocking",
+    "tagDATA_RECOVERY": "Data Recovery",
+    "tagOTHER": "Other"
+  },
+  "condition": {
+    "title": "Condition Check",
+    "subtitle": "Are there any visible damages on the device?",
+    "none": "No visual defects",
+    "screen": "Screen Scratch/Crack",
+    "back": "Back Scratch/Crack",
+    "frame": "Damaged Frame",
+    "camera": "Defective Camera Glass",
+    "buttons": "Stuck Buttons",
+    "battery": "Swollen Battery",
+    "other": "Other"
+  },
+  "accessories": {
+    "title": "Accessories",
+    "subtitle": "Which accessories are you handing over?",
+    "simCard": "SIM Card in device",
+    "case": "Protective Case",
+    "sdCard": "SD Memory Card",
+    "box": "Original Box",
+    "chargingCable": "Charging Cable / Adapter"
+  },
+  "history": {
+    "title": "Repair History",
+    "subtitle": "Has the device been repaired before?",
+    "yes": "Yes, it has been repaired before",
+    "no": "No, never repaired"
+  },
+  "signature": {
+    "title": "Signature & Terms",
+    "subtitle": "Please confirm your order",
+    "terms": "I confirm the accuracy of the data provided and agree to the Terms and Conditions. I am aware that no warranty is given for water damage and data loss is possible.",
+    "signHere": "Please sign here",
+    "clear": "Clear",
+    "noSignatureErr": "Please sign to continue"
+  },
+  "confirmation": {
+    "title": "Thank You!",
+    "subtitle": "Your repair order has been successfully created.",
+    "ticketLabel": "Your Ticket Number",
+    "instruction": "Please hand your device to one of our staff members at the counter now.",
+    "startOver": "Back to Start"
+  },
+  "errors": {
+    "general": "An error occurred. Please try again.",
+    "network": "Connection error. Please check your internet.",
+    "searchFailed": "Customer search failed.",
+    "invalidPhone": "Please enter a valid phone number."
+  }
+}

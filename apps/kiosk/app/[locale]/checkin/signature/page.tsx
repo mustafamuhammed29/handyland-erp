@@ -3,11 +3,13 @@
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useWizard } from "../../../../components/kiosk/WizardContext";
+import { useTranslations } from "next-intl";
 import { StepTransition, fieldVariants } from "../../../../components/kiosk/StepTransition";
 import { ArrowRight, ArrowLeft, Trash2, CheckCircle2 } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
 
 export default function SignatureStep() {
+  const t = useTranslations();
   const { state, updateState, nextStep, prevStep } = useWizard();
   const sigCanvas = useRef<SignatureCanvas>(null);
   const [hasSignature, setHasSignature] = useState(false);
@@ -31,11 +33,11 @@ export default function SignatureStep() {
 
   const handleContinue = () => {
     if (!hasSignature) {
-      setError("Bitte unterschreiben Sie im markierten Feld.");
+      setError(t("signature.noSignatureErr"));
       return;
     }
     if (!termsAccepted) {
-      setError("Bitte akzeptieren Sie die Reparaturbedingungen.");
+      setError(t("errors.general", { fallback: "Bitte akzeptieren Sie die Reparaturbedingungen." }));
       return;
     }
     
@@ -51,10 +53,10 @@ export default function SignatureStep() {
     <StepTransition stepIndex={8}>
       <motion.div variants={fieldVariants} className="space-y-4 text-center mb-6">
         <h1 className="text-4xl md:text-5xl font-display font-medium text-white">
-          Unterschrift & AGB
+          {t("signature.title")}
         </h1>
         <p className="text-lg text-white/60">
-          Bitte bestätigen Sie die Reparatur mit Ihrer Unterschrift.
+          {t("signature.subtitle")}
         </p>
       </motion.div>
 
@@ -62,13 +64,13 @@ export default function SignatureStep() {
         
         <motion.div variants={fieldVariants} className="space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-white/80 ml-2">Ihre Unterschrift *</label>
+            <label className="text-sm font-medium text-white/80 ms-2">{t("signature.signHere")}</label>
             <button 
               onClick={clearSignature}
               className="text-sm text-white/50 hover:text-white flex items-center gap-1 transition-colors"
             >
               <Trash2 className="w-4 h-4" />
-              Unterschrift löschen
+              {t("signature.clear")}
             </button>
           </div>
           
@@ -96,10 +98,7 @@ export default function SignatureStep() {
             </div>
             <div className="space-y-1">
               <p className="text-base text-white/90 leading-tight">
-                Ich akzeptiere die Allgemeinen Geschäftsbedingungen und die Datenschutzerklärung.
-              </p>
-              <p className="text-sm text-white/50">
-                Ich stimme zu, dass meine Daten für die Zwecke der Reparaturabwicklung gespeichert und verarbeitet werden.
+                {t("signature.terms")}
               </p>
             </div>
           </div>
@@ -122,8 +121,8 @@ export default function SignatureStep() {
             onClick={prevStep}
             className="w-1/3 bg-[var(--color-surface-2)] text-white font-medium text-lg py-5 rounded-2xl flex items-center justify-center gap-2 hover:bg-white/10 transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
-            Zurück
+            <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
+            {t("common.back")}
           </motion.button>
           
           <motion.button
@@ -132,8 +131,8 @@ export default function SignatureStep() {
             onClick={handleContinue}
             className="w-2/3 bg-[var(--color-primary)] text-black font-medium text-lg py-5 rounded-2xl flex items-center justify-center gap-2 hover:bg-[var(--color-primary-hover)] transition-colors shadow-[0_0_20px_rgba(245,197,24,0.3)]"
           >
-            Weiter
-            <ArrowRight className="w-5 h-5" />
+            {t("common.next")}
+            <ArrowRight className="w-5 h-5 rtl:rotate-180" />
           </motion.button>
         </motion.div>
       </div>

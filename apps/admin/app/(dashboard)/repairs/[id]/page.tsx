@@ -20,7 +20,7 @@ export default async function RepairDetailPage({ params }: { params: Promise<{ i
       device: true,
       issues: true,
       conditionItems: true,
-      repairParts: {
+      parts: {
         include: { part: true }
       },
       statusHistory: {
@@ -265,7 +265,7 @@ export default async function RepairDetailPage({ params }: { params: Promise<{ i
           <RepairPartsEditor 
             repairId={repair.id}
             availableParts={availableParts.map(p => ({ ...p, price: Number(p.price) }))}
-            assignedParts={repair.repairParts.map(rp => ({
+            assignedParts={repair.parts.map(rp => ({
               id: rp.id,
               partId: rp.partId,
               quantity: rp.quantity,

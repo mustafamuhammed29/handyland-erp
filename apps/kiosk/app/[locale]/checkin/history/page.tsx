@@ -3,17 +3,19 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useWizard } from "../../../../components/kiosk/WizardContext";
+import { useTranslations } from "next-intl";
 import { StepTransition, fieldVariants } from "../../../../components/kiosk/StepTransition";
 import { ArrowRight, ArrowLeft, History } from "lucide-react";
 
 export default function HistoryStep() {
+  const t = useTranslations();
   const { state, updateState, nextStep, prevStep } = useWizard();
   const [previousRepairs, setPreviousRepairs] = useState<boolean | null>(state.history?.previousRepairs ?? null);
   const [error, setError] = useState("");
 
   const handleContinue = () => {
     if (previousRepairs === null) {
-      setError("Bitte beantworten Sie die Frage.");
+      setError(t("errors.general", { fallback: "Bitte beantworten Sie die Frage." }));
       return;
     }
     
@@ -32,10 +34,10 @@ export default function HistoryStep() {
           <History className="w-8 h-8 text-[var(--color-primary)]" />
         </div>
         <h1 className="text-4xl md:text-5xl font-display font-medium text-white">
-          Reparaturhistorie
+          {t("history.title")}
         </h1>
         <p className="text-lg text-white/60">
-          Wurde das Gerät in der Vergangenheit bereits repariert?
+          {t("history.subtitle")}
         </p>
       </motion.div>
 
@@ -49,7 +51,7 @@ export default function HistoryStep() {
                 : "bg-[var(--color-surface)] border-white/10 text-white/70 hover:bg-white/5"
             }`}
           >
-            Ja
+            {t("history.yes", { fallback: "Ja" }).split(',')[0]}
           </button>
           <button
             onClick={() => { setPreviousRepairs(false); setError(""); }}
@@ -59,7 +61,7 @@ export default function HistoryStep() {
                 : "bg-[var(--color-surface)] border-white/10 text-white/70 hover:bg-white/5"
             }`}
           >
-            Nein
+            {t("history.no", { fallback: "Nein" }).split(',')[0]}
           </button>
         </motion.div>
 
@@ -80,8 +82,8 @@ export default function HistoryStep() {
             onClick={prevStep}
             className="w-1/3 bg-[var(--color-surface-2)] text-white font-medium text-lg py-5 rounded-2xl flex items-center justify-center gap-2 hover:bg-white/10 transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
-            Zurück
+            <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
+            {t("common.back")}
           </motion.button>
           
           <motion.button
@@ -90,8 +92,8 @@ export default function HistoryStep() {
             onClick={handleContinue}
             className="w-2/3 bg-[var(--color-primary)] text-black font-medium text-lg py-5 rounded-2xl flex items-center justify-center gap-2 hover:bg-[var(--color-primary-hover)] transition-colors shadow-[0_0_20px_rgba(245,197,24,0.3)]"
           >
-            Weiter
-            <ArrowRight className="w-5 h-5" />
+            {t("common.next")}
+            <ArrowRight className="w-5 h-5 rtl:rotate-180" />
           </motion.button>
         </motion.div>
       </div>

@@ -2,9 +2,11 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { useWizard } from "./WizardContext";
 
 export function StepProgress() {
+  const t = useTranslations();
   const { currentStep, steps } = useWizard();
   
   if (currentStep === 0 || currentStep === steps.length - 1) {
@@ -29,7 +31,7 @@ export function StepProgress() {
       <div className="flex items-center justify-between px-6 py-3 bg-black/40 backdrop-blur-md border-b border-white/5">
         <div className="flex items-center gap-3">
           <span className="text-xs font-bold bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-2.5 py-1 rounded-full">
-            Schritt {currentStep} von {steps.length - 2}
+            {t("common.stepOf", { current: currentStep, total: steps.length - 2, fallback: `Schritt ${currentStep} von ${steps.length - 2}` })}
           </span>
           <span className="text-sm font-medium text-white/80">{currentStepData?.title || ""}</span>
         </div>

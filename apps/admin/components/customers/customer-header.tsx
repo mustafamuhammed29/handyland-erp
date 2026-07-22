@@ -1,4 +1,4 @@
-import { LoyaltyBadge } from "../../ui/loyalty-badge";
+import { LoyaltyBadge } from "../ui/loyalty-badge";
 import { formatDistanceToNow } from "date-fns";
 import { de } from "date-fns/locale";
 import { Mail, Phone, Edit2 } from "lucide-react";

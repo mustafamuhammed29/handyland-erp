@@ -1,6 +1,6 @@
 "use client";
 
-import { LoyaltyBadge } from "../../ui/loyalty-badge";
+import { LoyaltyBadge } from "../ui/loyalty-badge";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 

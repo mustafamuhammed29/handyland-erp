@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useWizard } from "../../../../components/kiosk/WizardContext";
+import { useTranslations } from "next-intl";
 import { StepTransition, fieldVariants } from "../../../../components/kiosk/StepTransition";
 import { 
   ArrowRight, ArrowLeft, 
@@ -13,22 +14,23 @@ import {
 } from "lucide-react";
 
 const PROBLEM_OPTIONS = [
-  { id: "DISPLAY", label: "Display / Bildschirm", icon: Smartphone },
-  { id: "BATTERY", label: "Akku / Battery", icon: Battery },
-  { id: "CHARGING_PORT", label: "Ladebuchse", icon: PlugZap },
-  { id: "SPEAKER", label: "Lautsprecher", icon: Volume2 },
-  { id: "EARPIECE", label: "Ohrmuschel", icon: Ear },
-  { id: "MICROPHONE", label: "Mikrofon", icon: Mic },
-  { id: "CAMERA", label: "Kamera", icon: Camera },
-  { id: "WATER_DAMAGE", label: "Wasserschaden", icon: Droplet },
-  { id: "BACK_COVER", label: "Back Cover", icon: LayoutTemplate },
-  { id: "SOFTWARE", label: "Software Problem", icon: Code },
-  { id: "UNLOCKING", label: "Entsperren", icon: Unlock },
-  { id: "DATA_RECOVERY", label: "Datenrettung", icon: DatabaseBackup },
-  { id: "OTHER", label: "Sonstiges", icon: HelpCircle },
+  { id: "DISPLAY", translationKey: "tagDISPLAY", icon: Smartphone },
+  { id: "BATTERY", translationKey: "tagBATTERY", icon: Battery },
+  { id: "CHARGING_PORT", translationKey: "tagCHARGING_PORT", icon: PlugZap },
+  { id: "SPEAKER", translationKey: "tagSPEAKER", icon: Volume2 },
+  { id: "EARPIECE", translationKey: "tagEARPIECE", icon: Ear },
+  { id: "MICROPHONE", translationKey: "tagMICROPHONE", icon: Mic },
+  { id: "CAMERA", translationKey: "tagCAMERA", icon: Camera },
+  { id: "WATER_DAMAGE", translationKey: "tagWATER_DAMAGE", icon: Droplet },
+  { id: "BACK_COVER", translationKey: "tagBACK_COVER", icon: LayoutTemplate },
+  { id: "SOFTWARE", translationKey: "tagSOFTWARE", icon: Code },
+  { id: "UNLOCKING", translationKey: "tagUNLOCKING", icon: Unlock },
+  { id: "DATA_RECOVERY", translationKey: "tagDATA_RECOVERY", icon: DatabaseBackup },
+  { id: "OTHER", translationKey: "tagOTHER", icon: HelpCircle },
 ];
 
 export default function ProblemStep() {
+  const t = useTranslations();
   const { state, updateState, nextStep, prevStep } = useWizard();
   const [selectedProblems, setSelectedProblems] = useState<string[]>(state.problems || []);
 
@@ -49,10 +51,10 @@ export default function ProblemStep() {
     <StepTransition stepIndex={4}>
       <motion.div variants={fieldVariants} className="space-y-4 text-center mb-8">
         <h1 className="text-4xl md:text-5xl font-display font-medium text-white">
-          Was ist defekt?
+          {t("problem.title")}
         </h1>
         <p className="text-lg text-white/60">
-          Bitte wählen Sie alle zutreffenden Probleme aus.
+          {t("problem.subtitle")}
         </p>
       </motion.div>
 
@@ -76,7 +78,7 @@ export default function ProblemStep() {
               >
                 <Icon className={`w-10 h-10 mb-4 ${isSelected ? "text-[var(--color-primary)]" : "text-white/50"}`} strokeWidth={1.5} />
                 <span className="text-sm font-medium text-center leading-tight">
-                  {option.label}
+                  {t(`problem.${option.translationKey}` as any)}
                 </span>
                 {isSelected && (
                   <div className="absolute top-3 right-3 w-3 h-3 bg-[var(--color-primary)] rounded-full shadow-[0_0_8px_var(--color-primary)]" />
@@ -93,8 +95,8 @@ export default function ProblemStep() {
             onClick={prevStep}
             className="w-1/3 bg-[var(--color-surface-2)] text-white font-medium text-lg py-5 rounded-2xl flex items-center justify-center gap-2 hover:bg-white/10 transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
-            Zurück
+            <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
+            {t("common.back")}
           </motion.button>
           
           <motion.button
@@ -104,8 +106,8 @@ export default function ProblemStep() {
             disabled={selectedProblems.length === 0}
             className="w-2/3 bg-[var(--color-primary)] text-black font-medium text-lg py-5 rounded-2xl flex items-center justify-center gap-2 hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(245,197,24,0.3)]"
           >
-            Weiter
-            <ArrowRight className="w-5 h-5" />
+            {t("common.next")}
+            <ArrowRight className="w-5 h-5 rtl:rotate-180" />
           </motion.button>
         </motion.div>
       </div>

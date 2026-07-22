@@ -119,7 +119,10 @@ export default async function CustomersPage(props: { searchParams: Promise<{ sea
         </div>
       </div>
 
-      <CustomerTable customers={customers} />
+      <CustomerTable customers={customers.map(c => ({
+        ...c,
+        totalSpending: Number(c.totalSpending)
+      }))} />
 
       {/* Pagination */}
       {totalPages > 1 && (

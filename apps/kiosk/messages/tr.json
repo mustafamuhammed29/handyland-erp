@@ -1,0 +1,137 @@
+{
+  "steps": {
+    "language": "Dil Seçin",
+    "identify": "Kimlik Tespiti",
+    "personal": "Kişisel Bilgiler",
+    "device": "Cihaz Bilgileri",
+    "security": "Güvenlik",
+    "problem": "Problem Açıklaması",
+    "condition": "Durum Kontrolü",
+    "accessories": "Aksesuarlar",
+    "history": "Tamir Geçmişi",
+    "signature": "İmza ve Şartlar",
+    "confirmation": "Onay"
+  },
+  "common": {
+    "next": "İleri",
+    "back": "Geri",
+    "submit": "Gönder",
+    "cancel": "İptal Et",
+    "welcome": "Hoşgeldiniz",
+    "enterPhone": "Başlamak için lütfen telefon numaranızı girin.",
+    "welcomeBack": "Tekrar Hoşgeldiniz",
+    "newCustomer": "Yeni müşteri. Bilgilerinizi bir sonraki adımda alacağız.",
+    "repairs": "Tamirler",
+    "photoAdded": "Fotoğraf eklendi (Yeniden çek)",
+    "takePhoto": "Cihazın fotoğrafını çekin (İsteğe bağlı)",
+    "submitting": "Veriler güvenli bir şekilde aktarılıyor...",
+    "errorContact": "Lütfen resepsiyondaki bir görevli ile iletişime geçin.",
+    "stepOf": "Adım {current} / {total}",
+    "footer": "© {year} HANDYLAND Tamir Merkezi"
+  },
+  "personal": {
+    "title": "Kişisel Bilgiler",
+    "subtitle": "Size nasıl hitap etmeliyiz?",
+    "firstName": "Ad *",
+    "firstNamePlaceholder": "Ahmet",
+    "firstNameErr": "Ad gereklidir",
+    "lastName": "Soyad *",
+    "lastNamePlaceholder": "Yılmaz",
+    "lastNameErr": "Soyad gereklidir",
+    "email": "E-posta (İsteğe bağlı)",
+    "emailPlaceholder": "ahmet@ornek.com"
+  },
+  "device": {
+    "title": "Cihaz Bilgileri",
+    "subtitle": "Hangi cihazı tamir ettirmek istiyorsunuz?",
+    "brand": "Üretici Firma *",
+    "selectBrand": "Üretici seçin",
+    "customBrand": "Diğer Üretici",
+    "model": "Model *",
+    "modelPlaceholder": "örn. iPhone 13 Pro",
+    "modelErr": "Model gereklidir",
+    "imei": "IMEI / Seri Numarası (İsteğe bağlı)",
+    "imeiPlaceholder": "Garanti ve takip için",
+    "noModelWarning": "Lütfen bir model girin"
+  },
+  "security": {
+    "title": "Güvenlik",
+    "subtitle": "Fonksiyon testi için giriş bilgileri",
+    "noPassword": "Şifre yok / Bilinmiyor",
+    "passCode": "Cihaz Şifresi (PIN/Kod)",
+    "passCodePlaceholder": "123456",
+    "pattern": "Kilit Deseni",
+    "patternHint": "Deseninizi çizin",
+    "simPin": "SIM PIN (İsteğe bağlı)",
+    "simPinPlaceholder": "0000",
+    "resetPattern": "Sıfırla"
+  },
+  "problem": {
+    "title": "Problem Açıklaması",
+    "subtitle": "Cihazınızda ne bozuk?",
+    "descriptionLabel": "Lütfen problemi olabildiğince detaylı açıklayın:",
+    "descriptionPlaceholder": "örn. Telefon düştükten sonra ekran kırıldı ve dokunmatik kısmen çalışmıyor...",
+    "quickTags": "Hızlı seçim:",
+    "tagDISPLAY": "Ekran",
+    "tagBATTERY": "Batarya",
+    "tagCHARGING_PORT": "Şarj Soketi",
+    "tagSPEAKER": "Hoparlör",
+    "tagEARPIECE": "İç Kulaklık",
+    "tagMICROPHONE": "Mikrofon",
+    "tagCAMERA": "Kamera",
+    "tagWATER_DAMAGE": "Su Hasarı",
+    "tagBACK_COVER": "Arka Kapak",
+    "tagSOFTWARE": "Yazılım Problemi",
+    "tagUNLOCKING": "Kilit Açma",
+    "tagDATA_RECOVERY": "Veri Kurtarma",
+    "tagOTHER": "Diğer"
+  },
+  "condition": {
+    "title": "Durum Kontrolü",
+    "subtitle": "Cihazda gözle görülür herhangi bir hasar var mı?",
+    "none": "Görsel kusur yok",
+    "screen": "Ekran Çiziği/Kırığı",
+    "back": "Arka Çizik/Kırık",
+    "frame": "Hasarlı Çerçeve",
+    "camera": "Kusurlu Kamera Camı",
+    "buttons": "Sıkışmış Tuşlar",
+    "battery": "Şişmiş Batarya",
+    "other": "Diğer"
+  },
+  "accessories": {
+    "title": "Aksesuarlar",
+    "subtitle": "Hangi aksesuarları teslim ediyorsunuz?",
+    "simCard": "Cihazda SIM Kart",
+    "case": "Koruyucu Kılıf",
+    "sdCard": "SD Hafıza Kartı",
+    "box": "Orijinal Kutu",
+    "chargingCable": "Şarj Kablosu / Adaptör"
+  },
+  "history": {
+    "title": "Tamir Geçmişi",
+    "subtitle": "Cihaz daha önce tamir gördü mü?",
+    "yes": "Evet, daha önce tamir gördü",
+    "no": "Hayır, hiç tamir görmedi"
+  },
+  "signature": {
+    "title": "İmza ve Şartlar",
+    "subtitle": "Lütfen siparişinizi onaylayın",
+    "terms": "Verilen bilgilerin doğruluğunu onaylıyor ve Şartlar ve Koşulları kabul ediyorum. Su hasarı için garanti verilmediğini ve veri kaybının mümkün olduğunu biliyorum.",
+    "signHere": "Lütfen burayı imzalayın",
+    "clear": "Temizle",
+    "noSignatureErr": "Devam etmek için lütfen imzalayın"
+  },
+  "confirmation": {
+    "title": "Teşekkür Ederiz!",
+    "subtitle": "Tamir siparişiniz başarıyla oluşturuldu.",
+    "ticketLabel": "Bilet Numaranız",
+    "instruction": "Lütfen cihazınızı şimdi gişedeki personelimizden birine teslim edin.",
+    "startOver": "Başa Dön"
+  },
+  "errors": {
+    "general": "Bir hata oluştu. Lütfen tekrar deneyin.",
+    "network": "Bağlantı hatası. Lütfen internetinizi kontrol edin.",
+    "searchFailed": "Müşteri araması başarısız oldu.",
+    "invalidPhone": "Lütfen geçerli bir telefon numarası girin."
+  }
+}

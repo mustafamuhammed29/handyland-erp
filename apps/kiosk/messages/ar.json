@@ -1,0 +1,137 @@
+{
+  "steps": {
+    "language": "اختر اللغة",
+    "identify": "التعريف",
+    "personal": "البيانات الشخصية",
+    "device": "بيانات الجهاز",
+    "security": "الأمان",
+    "problem": "وصف المشكلة",
+    "condition": "فحص الحالة",
+    "accessories": "الملحقات",
+    "history": "سجل الإصلاحات",
+    "signature": "التوقيع والشروط",
+    "confirmation": "التأكيد"
+  },
+  "common": {
+    "next": "التالي",
+    "back": "رجوع",
+    "submit": "إرسال",
+    "cancel": "إلغاء",
+    "welcome": "مرحباً بك في",
+    "enterPhone": "يرجى إدخال رقم هاتفك للبدء.",
+    "welcomeBack": "مرحباً بعودتك",
+    "newCustomer": "عميل جديد. سنقوم بجمع بياناتك في الخطوة التالية.",
+    "repairs": "إصلاحات",
+    "photoAdded": "تم إضافة الصورة (التقط مرة أخرى)",
+    "takePhoto": "التقط صورة للجهاز (اختياري)",
+    "submitting": "جاري نقل البيانات بشكل آمن...",
+    "errorContact": "يرجى التواصل مع أحد الموظفين في الاستقبال.",
+    "stepOf": "الخطوة {current} من {total}",
+    "footer": "© {year} مركز صيانة هاندي لاند"
+  },
+  "personal": {
+    "title": "البيانات الشخصية",
+    "subtitle": "كيف تفضل أن نناديك؟",
+    "firstName": "الاسم الأول *",
+    "firstNamePlaceholder": "أحمد",
+    "firstNameErr": "الاسم الأول مطلوب",
+    "lastName": "اسم العائلة *",
+    "lastNamePlaceholder": "محمد",
+    "lastNameErr": "اسم العائلة مطلوب",
+    "email": "البريد الإلكتروني (اختياري)",
+    "emailPlaceholder": "ahmed@example.com"
+  },
+  "device": {
+    "title": "بيانات الجهاز",
+    "subtitle": "ما هو الجهاز الذي تود إصلاحه؟",
+    "brand": "الشركة المصنعة *",
+    "selectBrand": "اختر الشركة المصنعة",
+    "customBrand": "شركة مصنعة أخرى",
+    "model": "الموديل *",
+    "modelPlaceholder": "مثال: iPhone 13 Pro",
+    "modelErr": "الموديل مطلوب",
+    "imei": "رقم IMEI / الرقم التسلسلي (اختياري)",
+    "imeiPlaceholder": "للضمان والتتبع",
+    "noModelWarning": "يرجى إدخال الموديل"
+  },
+  "security": {
+    "title": "الأمان",
+    "subtitle": "بيانات الدخول لاختبار الوظائف",
+    "noPassword": "لا يوجد رمز / غير معروف",
+    "passCode": "رمز الجهاز (PIN)",
+    "passCodePlaceholder": "123456",
+    "pattern": "نمط إلغاء القفل",
+    "patternHint": "ارسم نمط القفل",
+    "simPin": "رمز SIM PIN (اختياري)",
+    "simPinPlaceholder": "0000",
+    "resetPattern": "إعادة تعيين"
+  },
+  "problem": {
+    "title": "وصف المشكلة",
+    "subtitle": "ما هو العطل في جهازك؟",
+    "descriptionLabel": "يرجى وصف المشكلة بدقة قدر الإمكان:",
+    "descriptionPlaceholder": "مثال: تحطمت الشاشة بعد سقوط الهاتف واللمس لا يعمل في بعض الأجزاء...",
+    "quickTags": "تحديد سريع:",
+    "tagDISPLAY": "شاشة / عرض",
+    "tagBATTERY": "بطارية",
+    "tagCHARGING_PORT": "منفذ الشحن",
+    "tagSPEAKER": "مكبر الصوت",
+    "tagEARPIECE": "سماعة الأذن",
+    "tagMICROPHONE": "ميكروفون",
+    "tagCAMERA": "كاميرا",
+    "tagWATER_DAMAGE": "تلف بالماء",
+    "tagBACK_COVER": "الغطاء الخلفي",
+    "tagSOFTWARE": "مشكلة برمجية",
+    "tagUNLOCKING": "إلغاء القفل",
+    "tagDATA_RECOVERY": "استعادة البيانات",
+    "tagOTHER": "أخرى"
+  },
+  "condition": {
+    "title": "فحص الحالة",
+    "subtitle": "هل توجد أي أضرار مرئية على الجهاز؟",
+    "none": "لا توجد عيوب بصرية",
+    "screen": "خدش/كسر بالشاشة",
+    "back": "خدش/كسر بالخلف",
+    "frame": "تلف بالإطار",
+    "camera": "زجاج الكاميرا معطل",
+    "buttons": "أزرار عالقة",
+    "battery": "بطارية منتفخة",
+    "other": "أخرى"
+  },
+  "accessories": {
+    "title": "الملحقات",
+    "subtitle": "ما هي الملحقات التي تقوم بتسليمها؟",
+    "simCard": "شريحة SIM داخل الجهاز",
+    "case": "غطاء حماية",
+    "sdCard": "بطاقة ذاكرة SD",
+    "box": "العلبة الأصلية",
+    "chargingCable": "كابل شحن / محول طاقة"
+  },
+  "history": {
+    "title": "سجل الإصلاحات",
+    "subtitle": "هل تم إصلاح الجهاز من قبل؟",
+    "yes": "نعم، تم إصلاحه مسبقاً",
+    "no": "لا، لم يتم إصلاحه أبداً"
+  },
+  "signature": {
+    "title": "التوقيع والشروط",
+    "subtitle": "يرجى تأكيد طلبك",
+    "terms": "أؤكد صحة البيانات المقدمة وأوافق على الشروط والأحكام. أنا على علم بأنه لا يوجد ضمان لأضرار المياه ومن الممكن فقدان البيانات.",
+    "signHere": "يرجى التوقيع هنا",
+    "clear": "مسح",
+    "noSignatureErr": "يرجى التوقيع للمتابعة"
+  },
+  "confirmation": {
+    "title": "شكراً لك!",
+    "subtitle": "تم إنشاء طلب الإصلاح الخاص بك بنجاح.",
+    "ticketLabel": "رقم التذكرة الخاصة بك",
+    "instruction": "يرجى تسليم جهازك لأحد موظفينا عند الشباك الآن.",
+    "startOver": "العودة للبداية"
+  },
+  "errors": {
+    "general": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+    "network": "خطأ في الاتصال. يرجى التحقق من الإنترنت الخاص بك.",
+    "searchFailed": "فشل في البحث عن العميل.",
+    "invalidPhone": "يرجى إدخال رقم هاتف صحيح."
+  }
+}

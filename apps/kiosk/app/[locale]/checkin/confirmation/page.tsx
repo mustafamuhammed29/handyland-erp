@@ -3,11 +3,13 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWizard } from "../../../../components/kiosk/WizardContext";
+import { useTranslations } from "next-intl";
 import { StepTransition, fieldVariants } from "../../../../components/kiosk/StepTransition";
 import { CheckCircle2, Loader2, Home } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
 export default function ConfirmationStep() {
+  const t = useTranslations();
   const { state, resetState } = useWizard();
   const [status, setStatus] = useState<"submitting" | "success" | "error">("submitting");
   const [ticketNumber, setTicketNumber] = useState<string>("");
@@ -46,7 +48,7 @@ export default function ConfirmationStep() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
         <Loader2 className="w-16 h-16 animate-spin text-[var(--color-primary)]" />
-        <h2 className="text-2xl font-medium text-white">Daten werden sicher übertragen...</h2>
+        <h2 className="text-2xl font-medium text-white">{t("common.submitting", { fallback: "Daten werden sicher übertragen..." })}</h2>
       </div>
     );
   }
@@ -57,13 +59,13 @@ export default function ConfirmationStep() {
         <div className="w-20 h-20 bg-[var(--color-error)]/20 rounded-full flex items-center justify-center">
           <span className="text-4xl">❌</span>
         </div>
-        <h2 className="text-3xl font-medium text-white">Ein Fehler ist aufgetreten</h2>
-        <p className="text-white/60">Bitte wenden Sie sich an einen Mitarbeiter an der Rezeption.</p>
+        <h2 className="text-3xl font-medium text-white">{t("errors.general")}</h2>
+        <p className="text-white/60">{t("common.errorContact", { fallback: "Bitte wenden Sie sich an einen Mitarbeiter an der Rezeption." })}</p>
         <button
           onClick={resetState}
           className="mt-8 px-8 py-4 bg-[var(--color-surface-2)] text-white rounded-2xl hover:bg-white/10 transition-colors"
         >
-          Zurück zum Start
+          {t("confirmation.startOver")}
         </button>
       </div>
     );
@@ -83,10 +85,10 @@ export default function ConfirmationStep() {
 
         <div className="space-y-4">
           <h1 className="text-4xl md:text-5xl font-display font-medium text-white">
-            Auftrag erfolgreich!
+            {t("confirmation.title")}
           </h1>
           <p className="text-xl text-white/70">
-            Ihre Reparatur wurde aufgenommen.
+            {t("confirmation.subtitle")}
           </p>
         </div>
 
@@ -96,7 +98,7 @@ export default function ConfirmationStep() {
         >
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent" />
           
-          <p className="text-sm text-white/50 mb-2 uppercase tracking-widest font-medium">Ticket Nummer</p>
+          <p className="text-sm text-white/50 mb-2 uppercase tracking-widest font-medium">{t("confirmation.ticketLabel")}</p>
           <motion.div 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -114,7 +116,7 @@ export default function ConfirmationStep() {
               bgColor="#ffffff"
             />
           </div>
-          <p className="text-sm text-white/50 mt-2">QR Code scannen für Status-Updates</p>
+          <p className="text-sm text-white/50 mt-2">{t("confirmation.instruction")}</p>
         </motion.div>
 
         <motion.button
@@ -124,8 +126,8 @@ export default function ConfirmationStep() {
           onClick={resetState}
           className="mt-8 bg-[var(--color-surface-2)] text-white font-medium text-lg py-4 px-8 rounded-2xl flex items-center justify-center gap-3 hover:bg-white/10 transition-colors border border-white/10"
         >
-          <Home className="w-5 h-5" />
-          Fertig & Zurück zum Start
+          <Home className="w-5 h-5 rtl:rotate-0" />
+          {t("confirmation.startOver")}
         </motion.button>
       </motion.div>
     </StepTransition>

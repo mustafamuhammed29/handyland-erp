@@ -1,0 +1,138 @@
+{
+  "steps": {
+    "language": "Sprache wählen",
+    "identify": "Identifikation",
+    "personal": "Persönliche Daten",
+    "device": "Gerätedaten",
+    "security": "Sicherheit",
+    "problem": "Problembeschreibung",
+    "condition": "Optische Mängel",
+    "accessories": "Zubehör",
+    "history": "Reparaturhistorie",
+    "signature": "Unterschrift & AGB",
+    "confirmation": "Bestätigung"
+  },
+  "common": {
+    "next": "Weiter",
+    "back": "Zurück",
+    "submit": "Absenden",
+    "cancel": "Abbrechen",
+    "welcome": "Willkommen bei",
+    "enterPhone": "Bitte geben Sie Ihre Telefonnummer ein, um zu beginnen.",
+    "welcomeBack": "Willkommen zurück",
+    "newCustomer": "Neuer Kunde. Wir werden Ihre Daten im nächsten Schritt aufnehmen.",
+    "repairs": "Reparaturen",
+    "photoAdded": "Foto hinzugefügt (Erneut aufnehmen)",
+    "takePhoto": "Foto vom Gerät machen (Optional)",
+    "submitting": "Daten werden sicher übertragen...",
+    "errorContact": "Bitte wenden Sie sich an einen Mitarbeiter an der Rezeption.",
+    "stepOf": "Schritt {current} von {total}",
+    "footer": "© {year} HANDYLAND Reparaturzentrum",
+    "securityInfo": "Ihre Daten werden sicher und verschlüsselt gespeichert und nur von unseren Technikern für die Reparatur verwendet."
+  },
+  "personal": {
+    "title": "Persönliche Daten",
+    "subtitle": "Wie dürfen wir Sie ansprechen?",
+    "firstName": "Vorname *",
+    "firstNamePlaceholder": "Max",
+    "firstNameErr": "Vorname ist erforderlich",
+    "lastName": "Nachname *",
+    "lastNamePlaceholder": "Mustermann",
+    "lastNameErr": "Nachname ist erforderlich",
+    "email": "E-Mail Adresse (Optional)",
+    "emailPlaceholder": "max@beispiel.de"
+  },
+  "device": {
+    "title": "Gerätedaten",
+    "subtitle": "Welches Gerät möchten Sie reparieren lassen?",
+    "brand": "Hersteller *",
+    "selectBrand": "Hersteller auswählen",
+    "customBrand": "Anderer Hersteller",
+    "model": "Modell *",
+    "modelPlaceholder": "z.B. iPhone 13 Pro",
+    "modelErr": "Modell ist erforderlich",
+    "imei": "IMEI / Seriennummer (Optional)",
+    "imeiPlaceholder": "Für Garantie & Nachverfolgung",
+    "noModelWarning": "Bitte geben Sie ein Modell ein"
+  },
+  "security": {
+    "title": "Sicherheit",
+    "subtitle": "Zugangsdaten für den Funktionstest",
+    "noPassword": "Kein Passwort / Nicht bekannt",
+    "passCode": "Geräte-Passwort (PIN/Code)",
+    "passCodePlaceholder": "123456",
+    "pattern": "Entsperrmuster",
+    "patternHint": "Zeichnen Sie Ihr Muster",
+    "simPin": "SIM-PIN (Optional)",
+    "simPinPlaceholder": "0000",
+    "resetPattern": "Zurücksetzen"
+  },
+  "problem": {
+    "title": "Problembeschreibung",
+    "subtitle": "Was ist an Ihrem Gerät defekt?",
+    "descriptionLabel": "Bitte beschreiben Sie das Problem möglichst genau:",
+    "descriptionPlaceholder": "z.B. Das Display ist nach einem Sturz gesplittert und der Touchscreen reagiert teilweise nicht mehr...",
+    "quickTags": "Schnellauswahl:",
+    "tagDISPLAY": "Display / Bildschirm",
+    "tagBATTERY": "Akku / Battery",
+    "tagCHARGING_PORT": "Ladebuchse",
+    "tagSPEAKER": "Lautsprecher",
+    "tagEARPIECE": "Ohrmuschel",
+    "tagMICROPHONE": "Mikrofon",
+    "tagCAMERA": "Kamera",
+    "tagWATER_DAMAGE": "Wasserschaden",
+    "tagBACK_COVER": "Back Cover",
+    "tagSOFTWARE": "Software Problem",
+    "tagUNLOCKING": "Entsperren",
+    "tagDATA_RECOVERY": "Datenrettung",
+    "tagOTHER": "Sonstiges"
+  },
+  "condition": {
+    "title": "Optische Mängel",
+    "subtitle": "Gibt es bereits sichtbare Schäden am Gerät?",
+    "none": "Keine optischen Mängel",
+    "screen": "Display Kratzer/Riss",
+    "back": "Rückseite Kratzer/Riss",
+    "frame": "Rahmen beschädigt",
+    "camera": "Kamera Glas defekt",
+    "buttons": "Tasten klemmen",
+    "battery": "Akku aufgebläht",
+    "other": "Sonstiges"
+  },
+  "accessories": {
+    "title": "Zubehör",
+    "subtitle": "Welches Zubehör übergeben Sie uns?",
+    "simCard": "SIM-Karte im Gerät",
+    "case": "Schutzhülle",
+    "sdCard": "SD-Speicherkarte",
+    "box": "Originalverpackung",
+    "chargingCable": "Ladekabel / Netzteil"
+  },
+  "history": {
+    "title": "Reparaturhistorie",
+    "subtitle": "Wurde das Gerät bereits schon einmal repariert?",
+    "yes": "Ja, es wurde schon einmal repariert",
+    "no": "Nein, noch nie repariert"
+  },
+  "signature": {
+    "title": "Unterschrift & AGB",
+    "subtitle": "Bitte bestätigen Sie Ihren Auftrag",
+    "terms": "Ich bestätige die Richtigkeit der angegebenen Daten und stimme den Allgemeinen Geschäftsbedingungen (AGB) zu. Mir ist bekannt, dass bei Wasserschäden keine Garantie übernommen wird und Datenverlust möglich ist.",
+    "signHere": "Bitte hier unterschreiben",
+    "clear": "Löschen",
+    "noSignatureErr": "Bitte unterschreiben Sie, um fortzufahren"
+  },
+  "confirmation": {
+    "title": "Auftrag erfolgreich!",
+    "subtitle": "Ihre Reparatur wurde aufgenommen.",
+    "ticketLabel": "Ticket Nummer",
+    "instruction": "QR Code scannen für Status-Updates",
+    "startOver": "Fertig & Zurück zum Start"
+  },
+  "errors": {
+    "general": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "network": "Verbindungsfehler. Bitte prüfen Sie Ihr Internet.",
+    "searchFailed": "Fehler bei der Kundensuche.",
+    "invalidPhone": "Bitte geben Sie eine gültige Telefonnummer ein."
+  }
+}

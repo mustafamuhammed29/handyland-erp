@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useWizard } from "../../../../components/kiosk/WizardContext";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Wrench } from "lucide-react";
 
@@ -51,6 +52,7 @@ const itemVariants = {
 };
 
 export default function LanguageStep() {
+  const t = useTranslations();
   const router = useRouter();
   const { setStepIndex, updateState } = useWizard();
 
@@ -91,8 +93,8 @@ export default function LanguageStep() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="text-center space-y-4"
         >
-          <h1 className="text-5xl md:text-6xl font-display font-medium text-white drop-shadow-sm">Willkommen</h1>
-          <p className="text-xl md:text-2xl text-gray-400 font-light tracking-wide">Bitte wählen Sie Ihre Sprache</p>
+          <h1 className="text-5xl md:text-6xl font-display font-medium text-white drop-shadow-sm">{t("common.welcome", { fallback: "Willkommen" })}</h1>
+          <p className="text-xl md:text-2xl text-gray-400 font-light tracking-wide">{t("steps.language", { fallback: "Bitte wählen Sie Ihre Sprache" })}</p>
         </motion.div>
 
         <motion.div 
@@ -128,7 +130,7 @@ export default function LanguageStep() {
         transition={{ delay: 0.8, duration: 1 }}
         className="w-full flex justify-between items-center px-12 py-8 z-10 text-gray-500 text-sm font-medium"
       >
-        <p>© {new Date().getFullYear()} HANDYLAND Reparaturzentrum</p>
+        <p>{t("common.footer", { year: new Date().getFullYear(), fallback: `© ${new Date().getFullYear()} HANDYLAND Reparaturzentrum` })}</p>
         <p>Kiosk v1.0.0</p>
       </motion.footer>
 

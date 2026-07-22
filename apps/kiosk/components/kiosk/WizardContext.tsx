@@ -3,24 +3,13 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
+import { useTranslations, useLocale } from "next-intl";
+
 export type WizardStep = {
   id: string;
   title: string;
   path: string;
 };
-
-export const WIZARD_STEPS: WizardStep[] = [
-  { id: "identify", title: "Identifikation", path: "/de/checkin/identify" },
-  { id: "personal", title: "Persönliche Daten", path: "/de/checkin/personal" },
-  { id: "device", title: "Gerätedaten", path: "/de/checkin/device" },
-  { id: "security", title: "Sicherheit", path: "/de/checkin/security" },
-  { id: "problem", title: "Problembeschreibung", path: "/de/checkin/problem" },
-  { id: "condition", title: "Optische Mängel", path: "/de/checkin/condition" },
-  { id: "accessories", title: "Zubehör", path: "/de/checkin/accessories" },
-  { id: "history", title: "Reparaturhistorie", path: "/de/checkin/history" },
-  { id: "signature", title: "Unterschrift & AGB", path: "/de/checkin/signature" },
-  { id: "confirmation", title: "Bestätigung", path: "/de/checkin/confirmation" }
-];
 
 export type WizardState = {
   language: string;
@@ -83,6 +72,22 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<WizardState>(initialState);
   const [currentStep, setCurrentStep] = useState(0);
   const router = useRouter();
+
+  const t = useTranslations('steps');
+  const locale = useLocale();
+
+  const WIZARD_STEPS: WizardStep[] = [
+    { id: "identify", title: t("identify"), path: `/${locale}/checkin/identify` },
+    { id: "personal", title: t("personal"), path: `/${locale}/checkin/personal` },
+    { id: "device", title: t("device"), path: `/${locale}/checkin/device` },
+    { id: "security", title: t("security"), path: `/${locale}/checkin/security` },
+    { id: "problem", title: t("problem"), path: `/${locale}/checkin/problem` },
+    { id: "condition", title: t("condition"), path: `/${locale}/checkin/condition` },
+    { id: "accessories", title: t("accessories"), path: `/${locale}/checkin/accessories` },
+    { id: "history", title: t("history"), path: `/${locale}/checkin/history` },
+    { id: "signature", title: t("signature"), path: `/${locale}/checkin/signature` },
+    { id: "confirmation", title: t("confirmation"), path: `/${locale}/checkin/confirmation` }
+  ];
 
   const updateState = (updates: Partial<WizardState>) => {
     setState((prev) => ({

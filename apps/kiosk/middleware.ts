@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { rateLimit } from './lib/rate-limit';
+import createIntlMiddleware from 'next-intl/middleware';
+
+const intlMiddleware = createIntlMiddleware({
+  locales: ['de', 'en', 'ar', 'tr'],
+  defaultLocale: 'de'
+});
 
 const limiter = rateLimit({
   uniqueTokenPerInterval: 500, // Max 500 users per interval
@@ -37,11 +43,20 @@ export async function middleware(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: 'Too Many Requests' }, { status: 429 });
     }
+    // Return Next.js response to prevent intlMiddleware from running on API routes
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  // Handle i18n routing for non-API requests
+  return intlMiddleware(request);
 }
 
 export const config = {
-  matcher: ['/api/:path*'],
+  // Skip all paths that should not be internationalized.
+  // This matches all paths EXCEPT:
+  // 1. /api routes (handled in middleware directly)
+  // 2. /_next (Next.js internals)
+  // 3. /_vercel (Vercel internals)
+  // 4. all root files inside /public (e.g. /favicon.ico)
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)', '/api/:path*']
 };

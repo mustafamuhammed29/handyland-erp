@@ -3,20 +3,22 @@
 import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useWizard } from "../../../../components/kiosk/WizardContext";
+import { useTranslations } from "next-intl";
 import { StepTransition, fieldVariants } from "../../../../components/kiosk/StepTransition";
 import { ArrowRight, ArrowLeft, Camera, CheckSquare, Square } from "lucide-react";
 
 const CONDITION_OPTIONS = [
-  { id: "SCREEN_SCRATCHES", label: "Kratzer auf dem Display" },
-  { id: "CRACKED_SCREEN", label: "Displayglas gesprungen" },
-  { id: "BACK_COVER_DAMAGED", label: "Rückseite beschädigt" },
-  { id: "BENT_FRAME", label: "Gehäuse verbogen" },
-  { id: "WATER_DAMAGE_VISIBLE", label: "Sichtbarer Wasserschaden" },
-  { id: "BROKEN_CAMERA_GLASS", label: "Kameraglas gebrochen" },
-  { id: "OTHER", label: "Sonstige Mängel" },
+  { id: "SCREEN_SCRATCHES", translationKey: "screen" },
+  { id: "BACK_COVER_DAMAGED", translationKey: "back" },
+  { id: "BENT_FRAME", translationKey: "frame" },
+  { id: "BROKEN_CAMERA_GLASS", translationKey: "camera" },
+  { id: "BUTTONS_STUCK", translationKey: "buttons" },
+  { id: "BATTERY_SWOLLEN", translationKey: "battery" },
+  { id: "OTHER", translationKey: "other" },
 ];
 
 export default function ConditionStep() {
+  const t = useTranslations();
   const { state, updateState, nextStep, prevStep } = useWizard();
   const [damages, setDamages] = useState<string[]>(state.condition?.damages || []);
   const [photoAdded, setPhotoAdded] = useState(false);
@@ -48,10 +50,10 @@ export default function ConditionStep() {
     <StepTransition stepIndex={5}>
       <motion.div variants={fieldVariants} className="space-y-4 text-center mb-8">
         <h1 className="text-4xl md:text-5xl font-display font-medium text-white">
-          Optische Mängel
+          {t("condition.title")}
         </h1>
         <p className="text-lg text-white/60">
-          Hat das Gerät bereits sichtbare Schäden?
+          {t("condition.subtitle")}
         </p>
       </motion.div>
 
@@ -69,7 +71,7 @@ export default function ConditionStep() {
                     : "bg-[var(--color-surface)] border-white/10 text-white/70 hover:bg-white/5"
                 }`}
               >
-                <span className="text-lg">{option.label}</span>
+                <span className="text-lg">{t(`condition.${option.translationKey}` as any)}</span>
                 {isSelected ? (
                   <CheckSquare className="w-6 h-6 text-[var(--color-primary)]" />
                 ) : (
@@ -99,7 +101,7 @@ export default function ConditionStep() {
           >
             <Camera className={`w-8 h-8 ${photoAdded ? "text-[var(--color-success)]" : "text-white/40"}`} />
             <span className="font-medium">
-              {photoAdded ? "Foto hinzugefügt (Erneut aufnehmen)" : "Foto vom Gerät machen (Optional)"}
+              {photoAdded ? t("common.photoAdded", { fallback: "Foto hinzugefügt (Erneut aufnehmen)" }) : t("common.takePhoto", { fallback: "Foto vom Gerät machen (Optional)" })}
             </span>
           </button>
         </motion.div>
@@ -111,8 +113,8 @@ export default function ConditionStep() {
             onClick={prevStep}
             className="w-1/3 bg-[var(--color-surface-2)] text-white font-medium text-lg py-5 rounded-2xl flex items-center justify-center gap-2 hover:bg-white/10 transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
-            Zurück
+            <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
+            {t("common.back")}
           </motion.button>
           
           <motion.button
@@ -121,8 +123,8 @@ export default function ConditionStep() {
             onClick={handleContinue}
             className="w-2/3 bg-[var(--color-primary)] text-black font-medium text-lg py-5 rounded-2xl flex items-center justify-center gap-2 hover:bg-[var(--color-primary-hover)] transition-colors shadow-[0_0_20px_rgba(245,197,24,0.3)]"
           >
-            Weiter
-            <ArrowRight className="w-5 h-5" />
+            {t("common.next")}
+            <ArrowRight className="w-5 h-5 rtl:rotate-180" />
           </motion.button>
         </motion.div>
       </div>

@@ -3,10 +3,12 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useWizard } from "../../../../components/kiosk/WizardContext";
+import { useTranslations } from "next-intl";
 import { StepTransition, fieldVariants } from "../../../../components/kiosk/StepTransition";
 import { ArrowRight, ArrowLeft, CreditCard, Smartphone } from "lucide-react";
 
 export default function AccessoriesStep() {
+  const t = useTranslations();
   const { state, updateState, nextStep, prevStep } = useWizard();
   const [hasSimCard, setHasSimCard] = useState<boolean | null>(state.accessories?.simCard ?? null);
   const [hasCase, setHasCase] = useState<boolean | null>(state.accessories?.case ?? null);
@@ -14,7 +16,7 @@ export default function AccessoriesStep() {
 
   const handleContinue = () => {
     if (hasSimCard === null || hasCase === null) {
-      setError("Bitte beantworten Sie beide Fragen.");
+      setError(t("errors.general", { fallback: "Bitte beantworten Sie beide Fragen." }));
       return;
     }
     
@@ -31,10 +33,10 @@ export default function AccessoriesStep() {
     <StepTransition stepIndex={6}>
       <motion.div variants={fieldVariants} className="space-y-4 text-center mb-8">
         <h1 className="text-4xl md:text-5xl font-display font-medium text-white">
-          Zubehör
+          {t("accessories.title")}
         </h1>
         <p className="text-lg text-white/60">
-          Was geben Sie zusammen mit dem Gerät ab?
+          {t("accessories.subtitle")}
         </p>
       </motion.div>
 
@@ -45,7 +47,7 @@ export default function AccessoriesStep() {
             <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center">
               <CreditCard className="w-5 h-5 text-white/70" />
             </div>
-            <h3 className="text-xl font-medium text-white">SIM-Karte im Gerät?</h3>
+            <h3 className="text-xl font-medium text-white">{t("accessories.simCard")}</h3>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
@@ -57,7 +59,7 @@ export default function AccessoriesStep() {
                   : "bg-[var(--color-surface)] border-white/10 text-white/70 hover:bg-white/5"
               }`}
             >
-              Ja
+              {t("history.yes", { fallback: "Ja" }).split(',')[0]}
             </button>
             <button
               onClick={() => { setHasSimCard(false); setError(""); }}
@@ -67,7 +69,7 @@ export default function AccessoriesStep() {
                   : "bg-[var(--color-surface)] border-white/10 text-white/70 hover:bg-white/5"
               }`}
             >
-              Nein
+              {t("history.no", { fallback: "Nein" }).split(',')[0]}
             </button>
           </div>
         </motion.div>
@@ -77,7 +79,7 @@ export default function AccessoriesStep() {
             <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center">
               <Smartphone className="w-5 h-5 text-white/70" />
             </div>
-            <h3 className="text-xl font-medium text-white">Handyhülle abgeben?</h3>
+            <h3 className="text-xl font-medium text-white">{t("accessories.case")}</h3>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
@@ -89,7 +91,7 @@ export default function AccessoriesStep() {
                   : "bg-[var(--color-surface)] border-white/10 text-white/70 hover:bg-white/5"
               }`}
             >
-              Ja
+              {t("history.yes", { fallback: "Ja" }).split(',')[0]}
             </button>
             <button
               onClick={() => { setHasCase(false); setError(""); }}
@@ -99,7 +101,7 @@ export default function AccessoriesStep() {
                   : "bg-[var(--color-surface)] border-white/10 text-white/70 hover:bg-white/5"
               }`}
             >
-              Nein
+              {t("history.no", { fallback: "Nein" }).split(',')[0]}
             </button>
           </div>
         </motion.div>
@@ -121,8 +123,8 @@ export default function AccessoriesStep() {
             onClick={prevStep}
             className="w-1/3 bg-[var(--color-surface-2)] text-white font-medium text-lg py-5 rounded-2xl flex items-center justify-center gap-2 hover:bg-white/10 transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
-            Zurück
+            <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
+            {t("common.back")}
           </motion.button>
           
           <motion.button
@@ -131,8 +133,8 @@ export default function AccessoriesStep() {
             onClick={handleContinue}
             className="w-2/3 bg-[var(--color-primary)] text-black font-medium text-lg py-5 rounded-2xl flex items-center justify-center gap-2 hover:bg-[var(--color-primary-hover)] transition-colors shadow-[0_0_20px_rgba(245,197,24,0.3)]"
           >
-            Weiter
-            <ArrowRight className="w-5 h-5" />
+            {t("common.next")}
+            <ArrowRight className="w-5 h-5 rtl:rotate-180" />
           </motion.button>
         </motion.div>
       </div>

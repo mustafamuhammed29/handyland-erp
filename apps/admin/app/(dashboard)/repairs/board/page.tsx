@@ -20,7 +20,7 @@ export default async function RepairsBoardPage() {
     include: {
       customer: { select: { firstName: true, lastName: true } },
       device: { select: { manufacturer: true, model: true } },
-      issues: { select: { issueType: true } }
+      issues: { select: { id: true, issueType: true } }
     },
     orderBy: { createdAt: "desc" }
   });
@@ -59,7 +59,7 @@ export default async function RepairsBoardPage() {
 
       <div className="flex-1 overflow-hidden mt-4">
         <KanbanBoardClient 
-          initialRepairs={repairs} 
+          initialRepairs={JSON.parse(JSON.stringify(repairs))} 
           technicians={technicians}
           currentUser={{ id: session.user.id, role: session.user.role }}
         />
