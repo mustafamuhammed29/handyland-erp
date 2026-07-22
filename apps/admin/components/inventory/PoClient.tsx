@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, Search, FileText, Truck, ArrowRight, Printer } from "lucide-react";
+import { Plus, Search, FileText, Truck, ArrowRight, Printer, Trash2 } from "lucide-react";
 import { createPurchaseOrder, updatePurchaseOrderStatus } from "../../app/actions/po";
 
 type PO = {
@@ -189,7 +189,9 @@ export function PoClient({ initialOrders, suppliers, parts }: {
                       value={item.partId}
                       onChange={e => {
                         const newItems = [...newPoItems];
-                        newItems[idx].partId = e.target.value;
+                        if (newItems[idx]) {
+                          newItems[idx].partId = e.target.value;
+                        }
                         setNewPoItems(newItems);
                       }}
                       className="flex-1 p-2 border rounded-md text-sm bg-background"
@@ -207,7 +209,9 @@ export function PoClient({ initialOrders, suppliers, parts }: {
                       value={item.quantity}
                       onChange={e => {
                         const newItems = [...newPoItems];
-                        newItems[idx].quantity = parseInt(e.target.value) || 1;
+                        if (newItems[idx]) {
+                          newItems[idx].quantity = parseInt(e.target.value) || 1;
+                        }
                         setNewPoItems(newItems);
                       }}
                       className="w-20 p-2 border rounded-md text-sm"

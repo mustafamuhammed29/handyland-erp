@@ -2,7 +2,7 @@
 
 import { prisma } from "@repo/database";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "../api/auth/[...nextauth]/route";
 import { revalidatePath } from "next/cache";
 
 export async function addCustomerNote(customerId: string, note: string) {

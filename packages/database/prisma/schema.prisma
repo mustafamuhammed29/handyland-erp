@@ -367,6 +367,27 @@ model ShopSettings {
 }
 
 // ===== INVENTORY =====
+model Category {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String   @unique
+
+  parts     Part[]
+}
+
+model DeviceModel {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  brand     String   // e.g., "Apple", "Samsung"
+  modelName String   // e.g., "iPhone 13 Pro"
+
+  parts     Part[]
+
+  @@unique([brand, modelName])
+}
+
 model Supplier {
   id          String   @id @default(cuid())
   createdAt   DateTime @default(now())
@@ -390,9 +411,15 @@ model Part {
   
   name        String
   category    String?  // e.g., "Display", "Battery", "Case"
+  categoryId  String?
+  categoryRel Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
   sku         String?  @unique
   brand       String?  // e.g., "Apple", "Samsung"
   deviceModel String?  // e.g., "iPhone 13 Pro"
+  deviceModelId String?
+  deviceModelRel DeviceModel? @relation(fields: [deviceModelId], references: [id], onDelete: SetNull)
+
   quality     String?  // e.g., "Original", "OEM", "Copy"
   color       String?  // e.g., "Black", "Silver"
   
@@ -413,6 +440,8 @@ model Part {
   
   @@index([category])
   @@index([brand, deviceModel])
+  @@index([categoryId])
+  @@index([deviceModelId])
   @@index([supplierId])
 }
 

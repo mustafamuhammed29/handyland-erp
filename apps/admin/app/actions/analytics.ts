@@ -35,7 +35,8 @@ export async function getAnalyticsData(startDateStr: string, endDateStr: string)
     const issueDistribution: Record<string, number> = {};
 
     repairsInRange.forEach(repair => {
-      const dateStr = repair.createdAt.toISOString().split("T")[0];
+      const dateStr = repair.createdAt.toISOString().split("T")[0] || "";
+      if (!dateStr) return;
       
       volumeByDay[dateStr] = (volumeByDay[dateStr] || 0) + 1;
       

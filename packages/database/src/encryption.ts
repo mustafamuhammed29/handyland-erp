@@ -46,6 +46,8 @@ export function decrypt(encryptedData: string | null | undefined): string | null
     }
     
     const [ivHex, authTagHex, encryptedHex] = parts;
+    if (!ivHex || !authTagHex || !encryptedHex) return encryptedData;
+
     const key = getEncryptionKey();
     const iv = Buffer.from(ivHex, 'hex');
     const authTag = Buffer.from(authTagHex, 'hex');

@@ -28,15 +28,15 @@ export default async function CustomersPage(props: { searchParams: Promise<{ sea
   const perPage = 50;
 
   // Build filter criteria
-  const whereClause = {
+  const whereClause: any = {
     AND: [
       searchParams.search
         ? {
             OR: [
-              { firstName: { contains: searchParams.search, mode: "insensitive" } },
-              { lastName: { contains: searchParams.search, mode: "insensitive" } },
+              { firstName: { contains: searchParams.search, mode: "insensitive" as const } },
+              { lastName: { contains: searchParams.search, mode: "insensitive" as const } },
               { phone: { contains: searchParams.search } },
-              { email: { contains: searchParams.search, mode: "insensitive" } },
+              { email: { contains: searchParams.search, mode: "insensitive" as const } },
             ],
           }
         : {},

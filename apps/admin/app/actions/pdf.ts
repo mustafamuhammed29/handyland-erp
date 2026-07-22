@@ -53,7 +53,7 @@ export async function generateRepairReceipt(repairId: string) {
         decryptedPassword: decryptedPassword || undefined,
         decryptedPin: decryptedPin || undefined,
         decryptedPattern: decryptedPattern || undefined,
-      })
+      }) as any
     );
 
     // Convert stream to buffer

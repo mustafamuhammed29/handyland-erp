@@ -47,7 +47,7 @@ export function RepairPartsEditor({
       setIsAdding(false);
       router.refresh();
     } else {
-      alert("Fehler: " + res.error);
+      alert("Fehler: " + (res as any).error);
     }
     setIsLoading(false);
   };
@@ -59,7 +59,7 @@ export function RepairPartsEditor({
     if (res.success) {
       router.refresh();
     } else {
-      alert("Fehler: " + res.error);
+      alert("Fehler: " + (res as any).error);
     }
     setIsLoading(false);
   };
@@ -76,7 +76,7 @@ export function RepairPartsEditor({
       setEditingId(null);
       router.refresh();
     } else {
-      alert("Fehler: " + res.error);
+      alert("Fehler: " + (res as any).error);
     }
     setIsLoading(false);
   };

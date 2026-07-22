@@ -47,7 +47,7 @@ export function SpendingChart({ data }: { data: SpendingData[] }) {
               tickLine={false}
             />
             <Tooltip 
-              formatter={(value: number) => [`€${value.toFixed(2)}`, 'Umsatz']}
+              formatter={(value: any) => [`€${Number(value || 0).toFixed(2)}`, 'Umsatz']}
               contentStyle={{ 
                 backgroundColor: 'white', 
                 border: '1px solid #e5e7eb',
