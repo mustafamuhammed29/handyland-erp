@@ -1,7 +1,15 @@
 "use server";
 
 import { prisma } from "@repo/database";
-import { revalidatePath } from "next/cache";
+import { revalidatePath as originalRevalidatePath } from "next/cache";
+
+function revalidatePath(path: string) {
+  try {
+    originalRevalidatePath(path);
+  } catch {
+    // Ignore store error when running outside Next.js request context
+  }
+}
 
 // --- CATEGORIES ---
 
