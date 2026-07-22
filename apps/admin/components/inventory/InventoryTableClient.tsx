@@ -1,13 +1,19 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { Search, Plus, Trash2, Edit, AlertTriangle, Package, PackagePlus, Tag, Smartphone } from "lucide-react";
+import { Search, Plus, Trash2, Edit, AlertTriangle, Package, PackagePlus, Tag, Smartphone, Filter, Layers } from "lucide-react";
 import { deleteParts, createPart, updatePart, updateStock, createCategory, createDeviceModel } from "../../app/actions/inventory";
 import { useRouter } from "next/navigation";
 import { getPartTransactions } from "../../app/actions/transactions";
 import { StockInModal } from "./StockInModal";
+import { QuickAddBrandModal } from "./QuickAddBrandModal";
 
 type Part = any;
+
+interface BrandItem {
+  id: string;
+  name: string;
+}
 
 interface CategoryItem {
   id: string;
@@ -17,6 +23,7 @@ interface CategoryItem {
 interface DeviceModelItem {
   id: string;
   brand: string;
+  brandId?: string | null;
   modelName: string;
 }
 
@@ -27,11 +34,13 @@ interface SupplierItem {
 
 export function InventoryTableClient({
   initialParts,
+  brands = [],
   categories = [],
   deviceModels = [],
   suppliers = [],
 }: {
   initialParts: Part[];
+  brands?: BrandItem[];
   categories?: CategoryItem[];
   deviceModels?: DeviceModelItem[];
   suppliers?: SupplierItem[];
@@ -40,6 +49,16 @@ export function InventoryTableClient({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+
+  // Dynamic Lists for Brands, Categories, Models
+  const [brandList, setBrandList] = useState<BrandItem[]>(brands);
+  const [categoryList, setCategoryList] = useState<CategoryItem[]>(categories);
+  const [deviceModelList, setDeviceModelList] = useState<DeviceModelItem[]>(deviceModels);
+
+  // Top Table Filters
+  const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>("ALL");
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("ALL");
+  const [selectedModelFilter, setSelectedModelFilter] = useState<string>("ALL");
 
   // Stock-In Modal State
   const [isStockInOpen, setIsStockInOpen] = useState(false);
@@ -51,6 +70,9 @@ export function InventoryTableClient({
   const [activeModalTab, setActiveModalTab] = useState<"edit" | "history">("edit");
   const [transactions, setTransactions] = useState<any[]>([]);
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
+
+  // Form Brand selection state for cascading device models
+  const [selectedFormBrandId, setSelectedFormBrandId] = useState<string>("");
 
   // Form Data with Category & DeviceModel relations
   const [formData, setFormData] = useState({
@@ -69,30 +91,71 @@ export function InventoryTableClient({
     supplierId: "",
   });
 
-  // Dynamic lists for inline additions
-  const [categoryList, setCategoryList] = useState<CategoryItem[]>(categories);
-  const [deviceModelList, setDeviceModelList] = useState<DeviceModelItem[]>(deviceModels);
+  // Inline Quick Add Modals State
+  const [showInlineBrandModal, setShowInlineBrandModal] = useState(false);
 
   const [showInlineCategoryModal, setShowInlineCategoryModal] = useState(false);
   const [newInlineCatName, setNewInlineCatName] = useState("");
   const [isAddingInlineCat, setIsAddingInlineCat] = useState(false);
 
   const [showInlineModelModal, setShowInlineModelModal] = useState(false);
-  const [newInlineBrand, setNewInlineBrand] = useState("Apple");
   const [newInlineModelName, setNewInlineModelName] = useState("");
   const [isAddingInlineModel, setIsAddingInlineModel] = useState(false);
 
-  // Filter Logic
+  // Cascading models for top filter
+  const availableModelsForFilter = selectedBrandFilter === "ALL"
+    ? deviceModelList
+    : deviceModelList.filter((m) => {
+        const brandObj = brandList.find((b) => b.id === selectedBrandFilter);
+        return m.brandId === selectedBrandFilter || (brandObj && m.brand.toLowerCase() === brandObj.name.toLowerCase());
+      });
+
+  // Cascading models for Add/Edit Form
+  const availableModelsForForm = !selectedFormBrandId
+    ? deviceModelList
+    : deviceModelList.filter((m) => {
+        const brandObj = brandList.find((b) => b.id === selectedFormBrandId);
+        return m.brandId === selectedFormBrandId || (brandObj && m.brand.toLowerCase() === brandObj.name.toLowerCase());
+      });
+
+  // Filter Logic with Safe Defaults
   const filteredParts = initialParts.filter((part) => {
     const searchString = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       part.name.toLowerCase().includes(searchString) ||
       (part.sku && part.sku.toLowerCase().includes(searchString)) ||
       (part.category && part.category.toLowerCase().includes(searchString)) ||
       (part.brand && part.brand.toLowerCase().includes(searchString)) ||
       (part.deviceModel && part.deviceModel.toLowerCase().includes(searchString)) ||
-      (part.location && part.location.toLowerCase().includes(searchString))
-    );
+      (part.location && part.location.toLowerCase().includes(searchString));
+
+    if (!matchesSearch) return false;
+
+    // Brand Filter
+    if (selectedBrandFilter !== "ALL") {
+      const brandObj = brandList.find((b) => b.id === selectedBrandFilter);
+      const targetBrandName = brandObj ? brandObj.name.toLowerCase() : "";
+      const partBrand = (part.brand || "").toLowerCase();
+      if (partBrand !== targetBrandName) return false;
+    }
+
+    // Category Filter
+    if (selectedCategoryFilter !== "ALL") {
+      const catObj = categoryList.find((c) => c.id === selectedCategoryFilter);
+      const targetCatName = catObj ? catObj.name.toLowerCase() : "";
+      const partCat = (part.category || "").toLowerCase();
+      if (partCat !== targetCatName && part.categoryId !== selectedCategoryFilter) return false;
+    }
+
+    // Model Filter
+    if (selectedModelFilter !== "ALL") {
+      const modelObj = deviceModelList.find((m) => m.id === selectedModelFilter);
+      const targetModelName = modelObj ? modelObj.modelName.toLowerCase() : "";
+      const partModel = (part.deviceModel || "").toLowerCase();
+      if (partModel !== targetModelName && part.deviceModelId !== selectedModelFilter) return false;
+    }
+
+    return true;
   });
 
   const toggleSelectAll = () => {
@@ -136,6 +199,7 @@ export function InventoryTableClient({
     setEditingPart(null);
     setActiveModalTab("edit");
     setTransactions([]);
+    setSelectedFormBrandId("");
     setFormData({
       name: "",
       categoryId: "",
@@ -157,28 +221,36 @@ export function InventoryTableClient({
   const openEditModal = async (part: Part) => {
     setEditingPart(part);
     setActiveModalTab("edit");
+    setTransactions([]);
+
+    // Find brandId from brand name
+    let matchedBrandId = "";
+    if (part.brand) {
+      const bObj = brandList.find((b) => b.name.toLowerCase() === part.brand.toLowerCase());
+      if (bObj) matchedBrandId = bObj.id;
+    }
+    setSelectedFormBrandId(matchedBrandId);
+
     setFormData({
-      name: part.name,
+      name: part.name || "",
       categoryId: part.categoryId || "",
       category: part.category || "",
       deviceModelId: part.deviceModelId || "",
       brand: part.brand || "",
       deviceModel: part.deviceModel || "",
       sku: part.sku || "",
-      quantity: part.quantity,
-      minQuantity: part.minQuantity,
-      price: part.price.toString(),
-      cost: part.cost?.toString() || "",
+      quantity: part.quantity || 0,
+      minQuantity: part.minQuantity || 5,
+      price: part.price || "",
+      cost: part.cost || "",
       location: part.location || "",
       supplierId: part.supplierId || "",
     });
     setIsModalOpen(true);
 
     setIsLoadingTransactions(true);
-    const res = await getPartTransactions(part.id);
-    if (res.success && res.transactions) {
-      setTransactions(res.transactions);
-    }
+    const txs = await getPartTransactions(part.id);
+    setTransactions(txs.transactions || []);
     setIsLoadingTransactions(false);
   };
 
@@ -202,15 +274,20 @@ export function InventoryTableClient({
 
   const handleAddModelInline = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newInlineBrand.trim() || !newInlineModelName.trim()) return;
+    if (!selectedFormBrandId || !newInlineModelName.trim()) return;
+
+    const brandObj = brandList.find((b) => b.id === selectedFormBrandId);
+    const brandName = brandObj ? brandObj.name : "";
+
     setIsAddingInlineModel(true);
-    const res = await createDeviceModel(newInlineBrand.trim(), newInlineModelName.trim());
+    const res = await createDeviceModel(brandName, newInlineModelName.trim(), selectedFormBrandId);
     setIsAddingInlineModel(false);
 
     if (res.success && res.deviceModel) {
       const created = {
         id: res.deviceModel.id,
         brand: res.deviceModel.brand,
+        brandId: res.deviceModel.brandId || selectedFormBrandId,
         modelName: res.deviceModel.modelName,
       };
       setDeviceModelList((prev) => [...prev, created]);
@@ -248,81 +325,158 @@ export function InventoryTableClient({
 
   return (
     <div className="space-y-4">
-      {/* Table Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between bg-card p-4 rounded-lg shadow-sm border">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Teil, SKU, Modell oder Kategorie suchen..."
-            className="w-full pl-9 pr-4 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-          />
+      {/* Table Toolbar & Filters */}
+      <div className="bg-card p-4 rounded-xl shadow-sm border space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Teil, SKU, Modell oder Kategorie suchen..."
+              className="w-full pl-9 pr-4 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+          </div>
+
+          <div className="flex gap-2 w-full sm:w-auto justify-end">
+            {selectedIds.size > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                disabled={isPending}
+                className="flex items-center gap-2 px-3 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg text-sm font-medium hover:bg-red-500/20 transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+                {selectedIds.size} Löschen
+              </button>
+            )}
+
+            {/* Wareneingang Stock-In Action Button */}
+            <button
+              onClick={() => {
+                setStockInPartId(null);
+                setIsStockInOpen(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground border border-accent/30 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
+            >
+              <PackagePlus className="h-4 w-4" />
+              + Wareneingang
+            </button>
+
+            {/* Add Part Button */}
+            <button
+              onClick={openAddModal}
+              className="flex items-center gap-2 px-4 py-2 bg-foreground text-background rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              <Plus className="h-4 w-4" />
+              Neues Teil
+            </button>
+          </div>
         </div>
 
-        <div className="flex gap-2">
-          {selectedIds.size > 0 && (
-            <button
-              onClick={handleBulkDelete}
-              disabled={isPending}
-              className="flex items-center gap-2 px-3 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg text-sm font-medium hover:bg-red-500/20 transition-colors"
+        {/* Filter Dropdowns (Brand -> Cascading Model -> Category) */}
+        <div className="flex flex-wrap items-center gap-3 pt-2 border-t text-xs">
+          <div className="flex items-center gap-1.5 font-medium text-muted-foreground">
+            <Filter className="w-3.5 h-3.5" /> Filter:
+          </div>
+
+          {/* Brand Filter */}
+          <div className="flex items-center gap-1">
+            <label className="text-muted-foreground">Marke:</label>
+            <select
+              value={selectedBrandFilter}
+              onChange={(e) => {
+                setSelectedBrandFilter(e.target.value);
+                setSelectedModelFilter("ALL"); // Reset model filter when brand changes
+              }}
+              className="px-2 py-1 border rounded-md bg-background text-xs font-medium"
             >
-              <Trash2 className="h-4 w-4" />
-              {selectedIds.size} Löschen
+              <option value="ALL">Alle Marken</option>
+              {brandList.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Model Filter (Cascaded by Brand Filter) */}
+          <div className="flex items-center gap-1">
+            <label className="text-muted-foreground">Modell:</label>
+            <select
+              value={selectedModelFilter}
+              onChange={(e) => setSelectedModelFilter(e.target.value)}
+              className="px-2 py-1 border rounded-md bg-background text-xs font-medium"
+            >
+              <option value="ALL">Alle Modelle</option>
+              {availableModelsForFilter.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.brand} {m.modelName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Category Filter */}
+          <div className="flex items-center gap-1">
+            <label className="text-muted-foreground">Kategorie:</label>
+            <select
+              value={selectedCategoryFilter}
+              onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+              className="px-2 py-1 border rounded-md bg-background text-xs font-medium"
+            >
+              <option value="ALL">Alle Kategorien</option>
+              {categoryList.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Reset Filters */}
+          {(selectedBrandFilter !== "ALL" || selectedCategoryFilter !== "ALL" || selectedModelFilter !== "ALL") && (
+            <button
+              onClick={() => {
+                setSelectedBrandFilter("ALL");
+                setSelectedCategoryFilter("ALL");
+                setSelectedModelFilter("ALL");
+              }}
+              className="text-accent hover:underline font-medium"
+            >
+              Filter zurücksetzen
             </button>
           )}
-
-          {/* Wareneingang Stock-In Action Button */}
-          <button
-            onClick={() => {
-              setStockInPartId(null);
-              setIsStockInOpen(true);
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-accent text-accent-foreground border border-accent/30 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
-          >
-            <PackagePlus className="h-4 w-4" />
-            + Wareneingang
-          </button>
-
-          {/* Add Part Button */}
-          <button
-            onClick={openAddModal}
-            className="flex items-center gap-2 px-4 py-2 bg-foreground text-background rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-          >
-            <Plus className="h-4 w-4" />
-            Neues Teil
-          </button>
         </div>
       </div>
 
       {/* Table */}
       <div className="border rounded-lg bg-card overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-muted/50 text-muted-foreground font-medium border-b">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="px-4 py-4 w-12">
+                <th className="px-4 py-3 w-10">
                   <input
-                    aria-label="Alle auswählen"
                     type="checkbox"
-                    className="rounded border-muted-foreground/30"
-                    checked={filteredParts.length > 0 && selectedIds.size === filteredParts.length}
+                    checked={selectedIds.size === filteredParts.length && filteredParts.length > 0}
                     onChange={toggleSelectAll}
+                    className="rounded border-gray-300"
                   />
                 </th>
-                <th className="px-6 py-4">Teil / SKU</th>
-                <th className="px-6 py-4">Kategorie & Modell</th>
-                <th className="px-6 py-4 text-center">Bestand</th>
-                <th className="px-6 py-4">Preis</th>
-                <th className="px-6 py-4">Lagerort</th>
-                <th className="px-6 py-4 text-right">Aktionen</th>
+                <th className="px-4 py-3 font-medium">Teil & SKU</th>
+                <th className="px-4 py-3 font-medium">Marke & Modell</th>
+                <th className="px-4 py-3 font-medium">Kategorie</th>
+                <th className="px-4 py-3 font-medium text-right">Lagerbestand</th>
+                <th className="px-4 py-3 font-medium text-right">VK-Preis</th>
+                <th className="px-4 py-3 font-medium text-right">EK-Preis</th>
+                <th className="px-4 py-3 font-medium text-right">Aktionen</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {filteredParts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
                     Keine Teile gefunden.
                   </td>
                 </tr>
@@ -330,70 +484,60 @@ export function InventoryTableClient({
                 filteredParts.map((part) => {
                   const isLowStock = part.quantity <= part.minQuantity;
                   return (
-                    <tr
-                      key={part.id}
-                      className={`hover:bg-muted/30 transition-colors ${selectedIds.has(part.id) ? "bg-muted/50" : ""} ${
-                        isLowStock ? "bg-red-50/50 dark:bg-red-950/10" : ""
-                      }`}
-                    >
-                      <td className="px-4 py-4">
+                    <tr key={part.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3">
                         <input
-                          aria-label={`${part.name} auswählen`}
                           type="checkbox"
-                          className="rounded border-muted-foreground/30"
                           checked={selectedIds.has(part.id)}
                           onChange={() => toggleSelect(part.id)}
+                          className="rounded border-gray-300"
                         />
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-foreground flex items-center gap-2">
-                          <Package className="w-4 h-4 text-muted-foreground" />
-                          {part.name}
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1">SKU: {part.sku || "-"}</div>
+                      <td className="px-4 py-3">
+                        <div className="font-semibold text-foreground">{part.name}</div>
+                        {part.sku && <div className="text-xs text-muted-foreground font-mono">SKU: {part.sku}</div>}
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1">
-                          <span className="w-fit px-2 py-0.5 rounded-full bg-muted border text-xs font-medium text-muted-foreground">
-                            {part.category || "Allgemein"}
+                      <td className="px-4 py-3">
+                        <div className="text-xs">
+                          <span className="font-semibold">{part.brand || "-"}</span>
+                          {part.deviceModel && <span className="text-muted-foreground"> {part.deviceModel}</span>}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-0.5 rounded-full bg-muted text-xs font-medium border">
+                          {part.category || "Allgemein"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleQuickStockChange(part.id, -1)}
+                            disabled={part.quantity <= 0}
+                            className="w-6 h-6 rounded bg-muted hover:bg-muted/80 flex items-center justify-center text-xs disabled:opacity-30 font-bold"
+                          >
+                            -
+                          </button>
+                          <span className={`font-mono font-bold px-2 ${isLowStock ? "text-red-500" : ""}`}>
+                            {part.quantity} Stk.
                           </span>
-                          {(part.brand || part.deviceModel) && (
-                            <span className="text-[11px] text-muted-foreground font-medium">
-                              {part.brand} {part.deviceModel}
+                          <button
+                            onClick={() => handleQuickStockChange(part.id, 1)}
+                            className="w-6 h-6 rounded bg-muted hover:bg-muted/80 flex items-center justify-center text-xs font-bold"
+                          >
+                            +
+                          </button>
+                          {isLowStock && (
+                            <span title="Niedriger Lagerbestand">
+                              <AlertTriangle className="w-4 h-4 text-red-500 ml-1" />
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center gap-3">
-                          <button
-                            disabled={isPending}
-                            onClick={() => handleQuickStockChange(part.id, -1)}
-                            className="w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 text-muted-foreground"
-                          >
-                            -
-                          </button>
-                          <span className={`font-mono font-bold text-base ${isLowStock ? "text-red-500" : ""}`}>
-                            {part.quantity}
-                          </span>
-                          <button
-                            disabled={isPending}
-                            onClick={() => handleQuickStockChange(part.id, 1)}
-                            className="w-6 h-6 rounded-full bg-muted flex items-center justify-center hover:bg-muted-foreground/20 text-muted-foreground"
-                          >
-                            +
-                          </button>
-                        </div>
-                        {isLowStock && (
-                          <div className="flex items-center justify-center gap-1 text-[10px] text-red-500 mt-1 uppercase font-bold tracking-wider">
-                            <AlertTriangle className="w-3 h-3" /> Nachbestellen
-                          </div>
-                        )}
+                      <td className="px-4 py-3 text-right font-mono font-semibold">€{Number(part.price).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-muted-foreground">
+                        {part.cost ? `€${Number(part.cost).toFixed(2)}` : "-"}
                       </td>
-                      <td className="px-6 py-4 font-medium text-foreground">{Number(part.price).toFixed(2)} €</td>
-                      <td className="px-6 py-4 text-muted-foreground text-sm">{part.location || "-"}</td>
-                      <td className="px-6 py-4 text-right space-x-1">
-                        {/* Quick Stock-In Button */}
+                      <td className="px-4 py-3 text-right">
                         <button
                           onClick={() => {
                             setStockInPartId(part.id);
@@ -432,6 +576,7 @@ export function InventoryTableClient({
         preselectedPartId={stockInPartId}
         parts={initialParts}
         suppliers={suppliers}
+        brands={brandList}
         categories={categoryList}
         deviceModels={deviceModelList}
       />
@@ -480,17 +625,92 @@ export function InventoryTableClient({
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    {/* Brand Dropdown + Quick Add */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <label className="text-xs font-medium">Marke</label>
+                        <button
+                          type="button"
+                          onClick={() => setShowInlineBrandModal(true)}
+                          className="text-[11px] text-accent hover:underline flex items-center gap-0.5"
+                        >
+                          <Plus className="w-3 h-3" /> Neu
+                        </button>
+                      </div>
+                      <select
+                        value={selectedFormBrandId}
+                        onChange={(e) => {
+                          const brandId = e.target.value;
+                          const bObj = brandList.find((b) => b.id === brandId);
+                          setSelectedFormBrandId(brandId);
+                          setFormData({
+                            ...formData,
+                            brand: bObj ? bObj.name : "",
+                            deviceModelId: "",
+                            deviceModel: "",
+                          });
+                        }}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-background text-sm"
+                      >
+                        <option value="">-- Keine Marke --</option>
+                        {brandList.map((b) => (
+                          <option key={b.id} value={b.id}>
+                            {b.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Device Model Dropdown (Cascaded by selected brand) + Inline Quick Add */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <label htmlFor="deviceModel" className="text-xs font-medium">
+                          Gerätemodell
+                        </label>
+                        <button
+                          type="button"
+                          disabled={!selectedFormBrandId}
+                          onClick={() => setShowInlineModelModal(true)}
+                          className="text-[11px] text-accent hover:underline flex items-center gap-0.5 disabled:opacity-40"
+                        >
+                          <Plus className="w-3 h-3" /> Neu
+                        </button>
+                      </div>
+                      <select
+                        id="deviceModelId"
+                        value={formData.deviceModelId}
+                        onChange={(e) => {
+                          const modelId = e.target.value;
+                          const foundModel = deviceModelList.find((m) => m.id === modelId);
+                          setFormData({
+                            ...formData,
+                            deviceModelId: modelId,
+                            brand: foundModel ? foundModel.brand : formData.brand,
+                            deviceModel: foundModel ? foundModel.modelName : "",
+                          });
+                        }}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-background text-sm"
+                      >
+                        <option value="">-- Keines / Universell --</option>
+                        {availableModelsForForm.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.modelName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
                     {/* Category Dropdown + Inline Quick Add */}
                     <div className="space-y-1">
                       <div className="flex justify-between items-center">
-                        <label htmlFor="category" className="text-sm font-medium">
+                        <label htmlFor="category" className="text-xs font-medium">
                           Kategorie
                         </label>
                         <button
                           type="button"
                           onClick={() => setShowInlineCategoryModal(true)}
-                          className="text-xs text-accent hover:underline flex items-center gap-0.5"
+                          className="text-[11px] text-accent hover:underline flex items-center gap-0.5"
                         >
                           <Plus className="w-3 h-3" /> Neu
                         </button>
@@ -517,44 +737,6 @@ export function InventoryTableClient({
                         ))}
                       </select>
                     </div>
-
-                    {/* Device Model Dropdown + Inline Quick Add */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <label htmlFor="deviceModel" className="text-sm font-medium">
-                          Gerätemodell
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setShowInlineModelModal(true)}
-                          className="text-xs text-accent hover:underline flex items-center gap-0.5"
-                        >
-                          <Plus className="w-3 h-3" /> Neu
-                        </button>
-                      </div>
-                      <select
-                        id="deviceModelId"
-                        value={formData.deviceModelId}
-                        onChange={(e) => {
-                          const modelId = e.target.value;
-                          const foundModel = deviceModelList.find((m) => m.id === modelId);
-                          setFormData({
-                            ...formData,
-                            deviceModelId: modelId,
-                            brand: foundModel ? foundModel.brand : "",
-                            deviceModel: foundModel ? foundModel.modelName : "",
-                          });
-                        }}
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-background text-sm"
-                      >
-                        <option value="">-- Keines / Universell --</option>
-                        {deviceModelList.map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.brand} {m.modelName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -566,38 +748,36 @@ export function InventoryTableClient({
                         id="sku"
                         value={formData.sku}
                         onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                        placeholder="z.B. DISP-IP13-BLK"
                         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-background"
                       />
                     </div>
-
                     <div className="space-y-2">
-                      <label htmlFor="supplier" className="text-sm font-medium">
-                        Lieferant
+                      <label htmlFor="price" className="text-sm font-medium">
+                        Verkaufspreis (€) <span className="text-red-500">*</span>
                       </label>
-                      <select
-                        id="supplierId"
-                        value={formData.supplierId}
-                        onChange={(e) => setFormData({ ...formData, supplierId: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-background text-sm"
-                      >
-                        <option value="">-- Keiner / Unbekannt --</option>
-                        {suppliers.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.name}
-                          </option>
-                        ))}
-                      </select>
+                      <input
+                        id="price"
+                        type="number"
+                        step="0.01"
+                        required
+                        value={formData.price}
+                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                        placeholder="0.00"
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-background"
+                      />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <label htmlFor="quantity" className="text-sm font-medium">
-                        Aktueller Bestand
+                        Bestand (Stk.)
                       </label>
                       <input
                         id="quantity"
                         type="number"
+                        min="0"
                         value={formData.quantity}
                         onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
                         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-background"
@@ -610,25 +790,9 @@ export function InventoryTableClient({
                       <input
                         id="minQuantity"
                         type="number"
+                        min="0"
                         value={formData.minQuantity}
                         onChange={(e) => setFormData({ ...formData, minQuantity: parseInt(e.target.value) || 0 })}
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-background"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label htmlFor="price" className="text-sm font-medium">
-                        Verkaufspreis (€) <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="price"
-                        required
-                        type="number"
-                        step="0.01"
-                        value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-background"
                       />
                     </div>
@@ -642,91 +806,79 @@ export function InventoryTableClient({
                         step="0.01"
                         value={formData.cost}
                         onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+                        placeholder="0.00"
                         className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-background"
                       />
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="location" className="text-sm font-medium">
-                      Lagerort (Regal/Fach)
-                    </label>
-                    <input
-                      id="location"
-                      value={formData.location}
-                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                      placeholder="z.B. Regal A, Fach 3"
-                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-background"
-                    />
-                  </div>
                 </form>
               ) : (
                 <div className="space-y-3">
+                  <h3 className="font-semibold text-sm">Lagerbewegungshistorie</h3>
                   {isLoadingTransactions ? (
-                    <p className="text-sm text-muted-foreground">Lade Historie...</p>
+                    <div className="text-center py-6 text-sm text-muted-foreground">Lade Historie...</div>
                   ) : transactions.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Keine Transaktionen gefunden.</p>
+                    <div className="text-center py-6 text-sm text-muted-foreground">Keine Transaktionen aufgezeichnet.</div>
                   ) : (
-                    <table className="w-full text-sm text-left border rounded-lg overflow-hidden">
-                      <thead className="bg-muted/50 border-b">
-                        <tr>
-                          <th className="px-3 py-2 font-medium">Datum</th>
-                          <th className="px-3 py-2 font-medium">Typ</th>
-                          <th className="px-3 py-2 font-medium text-right">Menge</th>
-                          <th className="px-3 py-2 font-medium">Benutzer</th>
-                          <th className="px-3 py-2 font-medium">Referenz / Notiz</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {transactions.map((t) => (
-                          <tr key={t.id} className="hover:bg-muted/30">
-                            <td className="px-3 py-2 text-muted-foreground">
-                              {new Date(t.createdAt).toLocaleDateString("de-DE")}{" "}
-                              {new Date(t.createdAt).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
-                            </td>
-                            <td className="px-3 py-2 font-semibold text-xs">{t.type}</td>
-                            <td className={`px-3 py-2 text-right font-medium ${t.quantityChange > 0 ? "text-green-600" : "text-red-600"}`}>
-                              {t.quantityChange > 0 ? "+" : ""}
-                              {t.quantityChange}
-                            </td>
-                            <td className="px-3 py-2">{t.staffName}</td>
-                            <td className="px-3 py-2 text-muted-foreground text-xs">
-                              {t.reference && <span className="font-semibold block">{t.reference}</span>}
-                              {t.notes}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    <div className="space-y-2">
+                      {transactions.map((tx: any) => (
+                        <div key={tx.id} className="p-3 border rounded-lg bg-muted/30 text-xs flex justify-between items-center">
+                          <div>
+                            <span className="font-semibold block">{tx.type}</span>
+                            <span className="text-muted-foreground">{new Date(tx.createdAt).toLocaleString("de-DE")}</span>
+                            {tx.notes && <span className="block text-muted-foreground italic mt-0.5">{tx.notes}</span>}
+                          </div>
+                          <div className="text-right">
+                            <span className={`font-mono font-bold ${tx.quantityChange > 0 ? "text-green-600" : "text-red-500"}`}>
+                              {tx.quantityChange > 0 ? `+${tx.quantityChange}` : tx.quantityChange} Stk.
+                            </span>
+                            <span className="block text-muted-foreground font-mono">
+                              Neu: {tx.newQuantity} Stk.
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               )}
             </div>
 
-            {activeModalTab === "edit" && (
-              <div className="flex justify-end gap-3 pt-4 border-t mt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border rounded-lg hover:bg-muted transition-colors font-medium text-sm"
-                >
-                  Abbrechen
-                </button>
+            <div className="flex justify-end gap-3 border-t pt-4 mt-2">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 border rounded-lg text-sm font-medium hover:bg-muted transition-colors"
+              >
+                Abbrechen
+              </button>
+              {activeModalTab === "edit" && (
                 <button
                   type="submit"
                   form="partForm"
                   disabled={isPending}
-                  className="px-4 py-2 bg-foreground text-background rounded-lg hover:opacity-90 transition-opacity font-medium text-sm disabled:opacity-50"
+                  className="px-4 py-2 bg-foreground text-background rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   {isPending ? "Speichern..." : "Speichern"}
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Quick Add Category Mini Modal inside Part form */}
+      {/* Reusable Quick-Add Brand Modal */}
+      <QuickAddBrandModal
+        isOpen={showInlineBrandModal}
+        onClose={() => setShowInlineBrandModal(false)}
+        onSuccess={(created) => {
+          setBrandList((prev) => [...prev, { id: created.id, name: created.name }]);
+          setSelectedFormBrandId(created.id);
+          setFormData((prev) => ({ ...prev, brand: created.name, deviceModelId: "", deviceModel: "" }));
+        }}
+      />
+
+      {/* Inline Quick Add Category Mini Modal */}
       {showInlineCategoryModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <form onSubmit={handleAddCategoryInline} className="bg-card w-full max-w-sm rounded-xl p-5 border shadow-2xl space-y-4">
@@ -742,7 +894,7 @@ export function InventoryTableClient({
                 required
                 value={newInlineCatName}
                 onChange={(e) => setNewInlineCatName(e.target.value)}
-                placeholder="z.B. Display, Akku..."
+                placeholder="z.B. Back Cover"
                 className="w-full px-3 py-2 border rounded-lg text-sm bg-background"
               />
             </div>
@@ -750,40 +902,29 @@ export function InventoryTableClient({
               <button
                 type="button"
                 onClick={() => setShowInlineCategoryModal(false)}
-                className="px-3 py-1.5 border rounded-lg text-xs font-medium"
+                className="px-3 py-1.5 border rounded-lg text-xs font-medium hover:bg-muted"
               >
                 Abbrechen
               </button>
               <button
                 type="submit"
                 disabled={isAddingInlineCat}
-                className="px-4 py-1.5 bg-foreground text-background rounded-lg text-xs font-semibold"
+                className="px-4 py-1.5 bg-foreground text-background rounded-lg text-xs font-semibold hover:opacity-90 disabled:opacity-50"
               >
-                {isAddingInlineCat ? "Erstelle..." : "Erstellen & Auswählen"}
+                {isAddingInlineCat ? "Erstelle..." : "Erstellen & Wählen"}
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* Quick Add Device Model Mini Modal inside Part form */}
+      {/* Inline Quick Add Device Model Mini Modal */}
       {showInlineModelModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <form onSubmit={handleAddModelInline} className="bg-card w-full max-w-sm rounded-xl p-5 border shadow-2xl space-y-4">
             <div className="flex items-center gap-2 border-b pb-3">
               <Smartphone className="w-4 h-4 text-accent" />
               <h3 className="font-bold text-sm">Neues Gerätemodell erstellen</h3>
-            </div>
-            <div>
-              <label className="text-xs font-medium block mb-1">Marke</label>
-              <input
-                type="text"
-                required
-                value={newInlineBrand}
-                onChange={(e) => setNewInlineBrand(e.target.value)}
-                placeholder="Apple, Samsung..."
-                className="w-full px-3 py-2 border rounded-lg text-sm bg-background"
-              />
             </div>
             <div>
               <label className="text-xs font-medium block mb-1">Modellname</label>
@@ -793,7 +934,7 @@ export function InventoryTableClient({
                 required
                 value={newInlineModelName}
                 onChange={(e) => setNewInlineModelName(e.target.value)}
-                placeholder="z.B. iPhone 16 Pro"
+                placeholder="z.B. iPhone 16 Pro Max"
                 className="w-full px-3 py-2 border rounded-lg text-sm bg-background"
               />
             </div>
@@ -801,16 +942,16 @@ export function InventoryTableClient({
               <button
                 type="button"
                 onClick={() => setShowInlineModelModal(false)}
-                className="px-3 py-1.5 border rounded-lg text-xs font-medium"
+                className="px-3 py-1.5 border rounded-lg text-xs font-medium hover:bg-muted"
               >
                 Abbrechen
               </button>
               <button
                 type="submit"
                 disabled={isAddingInlineModel}
-                className="px-4 py-1.5 bg-foreground text-background rounded-lg text-xs font-semibold"
+                className="px-4 py-1.5 bg-foreground text-background rounded-lg text-xs font-semibold hover:opacity-90 disabled:opacity-50"
               >
-                {isAddingInlineModel ? "Erstelle..." : "Erstellen & Auswählen"}
+                {isAddingInlineModel ? "Erstelle..." : "Erstellen & Wählen"}
               </button>
             </div>
           </form>

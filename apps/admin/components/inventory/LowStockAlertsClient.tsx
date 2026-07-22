@@ -22,6 +22,7 @@ interface LowStockAlertsClientProps {
   lowStockParts: Part[];
   allParts: Part[];
   suppliers: Array<{ id: string; name: string }>;
+  brands?: Array<{ id: string; name: string }>;
   categories: Array<{ id: string; name: string }>;
   deviceModels: Array<{ id: string; brand: string; modelName: string }>;
 }
@@ -30,6 +31,7 @@ export function LowStockAlertsClient({
   lowStockParts,
   allParts,
   suppliers,
+  brands: initialBrands = [],
   categories,
   deviceModels,
 }: LowStockAlertsClientProps) {
@@ -223,6 +225,7 @@ export function LowStockAlertsClient({
         preselectedPartId={selectedPartForStockIn}
         parts={allParts}
         suppliers={suppliers}
+        brands={initialBrands}
         categories={categories}
         deviceModels={deviceModels}
       />

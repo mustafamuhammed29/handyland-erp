@@ -119,6 +119,77 @@ export async function deleteCategory(id: string) {
   }
 }
 
+// --- BRANDS ---
+
+export async function getBrands() {
+  try {
+    const brands = await db.brand.findMany({
+      orderBy: { name: "asc" },
+      include: {
+        _count: {
+          select: { deviceModels: true },
+        },
+      },
+    });
+    return {
+      success: true,
+      brands: brands.map((b: any) => ({
+        id: b.id,
+        name: b.name,
+        modelsCount: b._count.deviceModels,
+        createdAt: b.createdAt.toISOString(),
+      })),
+    };
+  } catch (error: any) {
+    console.error("Failed to fetch brands:", error);
+    return { success: false, error: error.message, brands: [] };
+  }
+}
+
+export async function createBrand(name: string) {
+  try {
+    const trimmed = name.trim();
+    if (!trimmed) return { success: false, error: "Markenname ist erforderlich." };
+
+    const existing = await db.brand.findFirst({
+      where: { name: { equals: trimmed, mode: "insensitive" } },
+    });
+    if (existing) {
+      return { success: false, error: `Marke "${existing.name}" existiert bereits.`, brand: existing };
+    }
+
+    const brand = await db.brand.create({
+      data: { name: trimmed },
+    });
+    revalidatePath("/inventory");
+    revalidatePath("/inventory/settings");
+    return { success: true, brand };
+  } catch (error: any) {
+    console.error("Failed to create brand:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteBrand(id: string) {
+  try {
+    const modelsCount = await db.deviceModel.count({ where: { brandId: id } });
+    if (modelsCount > 0) {
+      return {
+        success: false,
+        error: `Marke kann nicht gelöscht werden, da sie noch von ${modelsCount} Gerätemodell(en) verwendet wird.`,
+      };
+    }
+
+    await db.brand.delete({ where: { id } });
+    revalidatePath("/inventory");
+    revalidatePath("/inventory/settings");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to delete brand:", error);
+    return { success: false, error: error.message };
+  }
+}
+
 // --- DEVICE MODELS ---
 
 export async function getDeviceModels() {
@@ -126,6 +197,7 @@ export async function getDeviceModels() {
     const deviceModels = await db.deviceModel.findMany({
       orderBy: [{ brand: "asc" }, { modelName: "asc" }],
       include: {
+        brandRel: true,
         _count: {
           select: { parts: true },
         },
@@ -135,7 +207,8 @@ export async function getDeviceModels() {
       success: true,
       deviceModels: deviceModels.map((m: any) => ({
         id: m.id,
-        brand: m.brand,
+        brand: m.brandRel ? m.brandRel.name : m.brand,
+        brandId: m.brandId || null,
         modelName: m.modelName,
         partsCount: m._count.parts,
         createdAt: m.createdAt.toISOString(),
@@ -147,18 +220,40 @@ export async function getDeviceModels() {
   }
 }
 
-export async function createDeviceModel(brand: string, modelName: string) {
+export async function createDeviceModel(brandInput: string, modelName: string, brandIdInput?: string) {
   try {
-    const trimmedBrand = brand.trim();
     const trimmedModel = modelName.trim();
+    if (!trimmedModel) {
+      return { success: false, error: "Modellname ist erforderlich." };
+    }
 
-    if (!trimmedBrand || !trimmedModel) {
-      return { success: false, error: "Marke und Modellname sind erforderlich." };
+    let finalBrandId: string | null = brandIdInput || null;
+    let finalBrandName = brandInput ? brandInput.trim() : "";
+
+    if (brandIdInput) {
+      const bObj = await db.brand.findUnique({ where: { id: brandIdInput } });
+      if (bObj) {
+        finalBrandName = bObj.name;
+        finalBrandId = bObj.id;
+      }
+    } else if (finalBrandName) {
+      let bObj = await db.brand.findFirst({
+        where: { name: { equals: finalBrandName, mode: "insensitive" } },
+      });
+      if (!bObj) {
+        bObj = await db.brand.create({ data: { name: finalBrandName } });
+      }
+      finalBrandId = bObj.id;
+      finalBrandName = bObj.name;
+    }
+
+    if (!finalBrandName) {
+      return { success: false, error: "Bitte wählen Sie eine Marke aus." };
     }
 
     const existing = await db.deviceModel.findFirst({
       where: {
-        brand: { equals: trimmedBrand, mode: "insensitive" },
+        brand: { equals: finalBrandName, mode: "insensitive" },
         modelName: { equals: trimmedModel, mode: "insensitive" },
       },
     });
@@ -171,7 +266,11 @@ export async function createDeviceModel(brand: string, modelName: string) {
     }
 
     const deviceModel = await db.deviceModel.create({
-      data: { brand: trimmedBrand, modelName: trimmedModel },
+      data: {
+        brand: finalBrandName,
+        brandId: finalBrandId,
+        modelName: trimmedModel,
+      },
     });
     revalidatePath("/inventory");
     revalidatePath("/inventory/settings");

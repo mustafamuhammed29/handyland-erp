@@ -5,6 +5,15 @@ import { CategoryDeviceSettingsClient } from "../../../../components/inventory/C
 export const dynamic = "force-dynamic";
 
 export default async function InventorySettingsPage() {
+  const brands = await prisma.brand.findMany({
+    orderBy: { name: "asc" },
+    include: {
+      _count: {
+        select: { deviceModels: true },
+      },
+    },
+  });
+
   const categories = await prisma.category.findMany({
     orderBy: { name: "asc" },
     include: {
@@ -17,11 +26,18 @@ export default async function InventorySettingsPage() {
   const deviceModels = await prisma.deviceModel.findMany({
     orderBy: [{ brand: "asc" }, { modelName: "asc" }],
     include: {
+      brandRel: true,
       _count: {
         select: { parts: true },
       },
     },
   });
+
+  const serializedBrands = brands.map((b) => ({
+    id: b.id,
+    name: b.name,
+    modelsCount: b._count.deviceModels,
+  }));
 
   const serializedCategories = categories.map((c) => ({
     id: c.id,
@@ -31,7 +47,8 @@ export default async function InventorySettingsPage() {
 
   const serializedDeviceModels = deviceModels.map((m) => ({
     id: m.id,
-    brand: m.brand,
+    brand: m.brandRel ? m.brandRel.name : m.brand,
+    brandId: m.brandId || null,
     modelName: m.modelName,
     partsCount: m._count.parts,
   }));
@@ -41,7 +58,7 @@ export default async function InventorySettingsPage() {
       {/* Page Header */}
       <div>
         <h1 className="text-3xl font-display font-bold tracking-tight">Inventar & Einstellungen</h1>
-        <p className="text-muted-foreground">Ersatzteil-Kategorien und Gerätemodelle verwalten.</p>
+        <p className="text-muted-foreground">Marken, Gerätemodelle und Ersatzteil-Kategorien verwalten.</p>
       </div>
 
       {/* Tab Switcher */}
@@ -49,6 +66,7 @@ export default async function InventorySettingsPage() {
 
       {/* Settings Client Component */}
       <CategoryDeviceSettingsClient
+        initialBrands={serializedBrands}
         initialCategories={serializedCategories}
         initialDeviceModels={serializedDeviceModels}
       />

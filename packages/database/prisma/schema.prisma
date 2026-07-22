@@ -367,6 +367,15 @@ model ShopSettings {
 }
 
 // ===== INVENTORY =====
+model Brand {
+  id           String        @id @default(cuid())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  name         String        @unique
+
+  deviceModels DeviceModel[]
+}
+
 model Category {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
@@ -381,6 +390,8 @@ model DeviceModel {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   brand     String   // e.g., "Apple", "Samsung"
+  brandId   String?
+  brandRel  Brand?   @relation(fields: [brandId], references: [id], onDelete: SetNull)
   modelName String   // e.g., "iPhone 13 Pro"
 
   parts     Part[]

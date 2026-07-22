@@ -35,10 +35,14 @@ export default async function InventoryPage({
   // Fetch stock parts
   const parts = await prisma.part.findMany({ orderBy: { name: "asc" } });
 
-  // Fetch categories, deviceModels, suppliers
-  const categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
-  const deviceModels = await prisma.deviceModel.findMany({
+  const db = prisma as any;
+
+  // Fetch brands, categories, deviceModels, suppliers
+  const brands = await db.brand.findMany({ orderBy: { name: "asc" } });
+  const categories = await db.category.findMany({ orderBy: { name: "asc" } });
+  const deviceModels = await db.deviceModel.findMany({
     orderBy: [{ brand: "asc" }, { modelName: "asc" }],
+    include: { brandRel: true },
   });
   const suppliers = await prisma.supplier.findMany({
     select: { id: true, name: true },
@@ -75,8 +79,14 @@ export default async function InventoryPage({
     cost: p.cost ? p.cost.toString() : null,
   }));
 
-  const serializedCategories = categories.map((c) => ({ id: c.id, name: c.name }));
-  const serializedDeviceModels = deviceModels.map((m) => ({ id: m.id, brand: m.brand, modelName: m.modelName }));
+  const serializedBrands = brands.map((b: any) => ({ id: b.id, name: b.name }));
+  const serializedCategories = categories.map((c: any) => ({ id: c.id, name: c.name }));
+  const serializedDeviceModels = deviceModels.map((m: any) => ({
+    id: m.id,
+    brand: m.brandRel ? m.brandRel.name : m.brand,
+    brandId: m.brandId || null,
+    modelName: m.modelName,
+  }));
   const serializedSuppliers = suppliers.map((s) => ({ id: s.id, name: s.name }));
 
   const lowStockParts = serializedParts.filter((p) => p.quantity <= p.minQuantity);
@@ -127,6 +137,7 @@ export default async function InventoryPage({
           lowStockParts={lowStockParts}
           allParts={serializedParts}
           suppliers={serializedSuppliers}
+          brands={serializedBrands}
           categories={serializedCategories}
           deviceModels={serializedDeviceModels}
         />
@@ -134,6 +145,7 @@ export default async function InventoryPage({
       {activeTab === "stock" && (
         <InventoryTableClient
           initialParts={serializedParts}
+          brands={serializedBrands}
           categories={serializedCategories}
           deviceModels={serializedDeviceModels}
           suppliers={serializedSuppliers}

@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useTransition } from "react";
-import { X, PackagePlus, Plus, Building2, Tag, Smartphone } from "lucide-react";
+import { X, PackagePlus, Plus, Building2, Tag, Smartphone, Layers } from "lucide-react";
 import { addStockIn, createCategory, createDeviceModel } from "../../app/actions/inventory";
 import { useRouter } from "next/navigation";
+import { QuickAddBrandModal } from "./QuickAddBrandModal";
 
 interface PartItem {
   id: string;
@@ -21,6 +22,11 @@ interface SupplierItem {
   name: string;
 }
 
+interface BrandItem {
+  id: string;
+  name: string;
+}
+
 interface CategoryItem {
   id: string;
   name: string;
@@ -29,6 +35,7 @@ interface CategoryItem {
 interface DeviceModelItem {
   id: string;
   brand: string;
+  brandId?: string | null;
   modelName: string;
 }
 
@@ -38,6 +45,7 @@ interface StockInModalProps {
   preselectedPartId?: string | null;
   parts: PartItem[];
   suppliers: SupplierItem[];
+  brands?: BrandItem[];
   categories: CategoryItem[];
   deviceModels: DeviceModelItem[];
   onSuccess?: () => void;
@@ -49,6 +57,7 @@ export function StockInModal({
   preselectedPartId,
   parts,
   suppliers,
+  brands = [],
   categories,
   deviceModels,
   onSuccess,
@@ -69,6 +78,7 @@ export function StockInModal({
   const [notes, setNotes] = useState<string>("");
 
   // New Part Data
+  const [selectedBrandId, setSelectedBrandId] = useState<string>("");
   const [newPart, setNewPart] = useState({
     name: "",
     categoryId: "",
@@ -81,19 +91,25 @@ export function StockInModal({
   });
 
   // Inline Quick Add States
+  const [brandList, setBrandList] = useState<BrandItem[]>(brands);
   const [categoryList, setCategoryList] = useState<CategoryItem[]>(categories);
   const [deviceModelList, setDeviceModelList] = useState<DeviceModelItem[]>(deviceModels);
-  
+
+  const [showQuickBrandModal, setShowQuickBrandModal] = useState(false);
+
   const [showQuickCategoryModal, setShowQuickCategoryModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isAddingCategory, setIsAddingCategory] = useState(false);
 
   const [showQuickModelModal, setShowQuickModelModal] = useState(false);
-  const [newModelBrand, setNewModelBrand] = useState("Apple");
   const [newModelName, setNewModelName] = useState("");
   const [isAddingModel, setIsAddingModel] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setBrandList(brands);
+  }, [brands]);
 
   useEffect(() => {
     setCategoryList(categories);
@@ -119,6 +135,14 @@ export function StockInModal({
   if (!isOpen) return null;
 
   const currentPart = parts.find((p) => p.id === selectedPartId);
+
+  // Cascading Device Models based on selected brand
+  const availableModelsForModal = !selectedBrandId
+    ? deviceModelList
+    : deviceModelList.filter((m) => {
+        const bObj = brandList.find((b) => b.id === selectedBrandId);
+        return m.brandId === selectedBrandId || (bObj && m.brand.toLowerCase() === bObj.name.toLowerCase());
+      });
 
   const handlePartChange = (id: string) => {
     setSelectedPartId(id);
@@ -150,15 +174,20 @@ export function StockInModal({
 
   const handleAddModelInline = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newModelBrand.trim() || !newModelName.trim()) return;
+    if (!selectedBrandId || !newModelName.trim()) return;
+
+    const bObj = brandList.find((b) => b.id === selectedBrandId);
+    const brandName = bObj ? bObj.name : "";
+
     setIsAddingModel(true);
-    const res = await createDeviceModel(newModelBrand.trim(), newModelName.trim());
+    const res = await createDeviceModel(brandName, newModelName.trim(), selectedBrandId);
     setIsAddingModel(false);
 
     if (res.success && res.deviceModel) {
       const created = {
         id: res.deviceModel.id,
         brand: res.deviceModel.brand,
+        brandId: res.deviceModel.brandId || selectedBrandId,
         modelName: res.deviceModel.modelName,
       };
       setDeviceModelList((prev) => [...prev, created]);
@@ -321,7 +350,63 @@ export function StockInModal({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
+                {/* Brand Dropdown + Quick Add */}
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-xs font-medium">Marke</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowQuickBrandModal(true)}
+                      className="text-[11px] text-accent hover:underline flex items-center gap-0.5"
+                    >
+                      <Plus className="w-3 h-3" /> Neu
+                    </button>
+                  </div>
+                  <select
+                    value={selectedBrandId}
+                    onChange={(e) => {
+                      setSelectedBrandId(e.target.value);
+                      setNewPart({ ...newPart, deviceModelId: "" });
+                    }}
+                    className="w-full px-3 py-2 border rounded-lg bg-background text-sm"
+                  >
+                    <option value="">-- Keine Marke --</option>
+                    {brandList.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Device Model Dropdown + Quick Add */}
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-xs font-medium">Gerätemodell</label>
+                    <button
+                      type="button"
+                      disabled={!selectedBrandId}
+                      onClick={() => setShowQuickModelModal(true)}
+                      className="text-[11px] text-accent hover:underline flex items-center gap-0.5 disabled:opacity-40"
+                    >
+                      <Plus className="w-3 h-3" /> Neu
+                    </button>
+                  </div>
+                  <select
+                    value={newPart.deviceModelId}
+                    onChange={(e) => setNewPart({ ...newPart, deviceModelId: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg bg-background text-sm"
+                  >
+                    <option value="">-- Keines / Universell --</option>
+                    {availableModelsForModal.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.modelName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Category Dropdown + Quick Add */}
                 <div>
                   <div className="flex justify-between items-center mb-1">
@@ -343,32 +428,6 @@ export function StockInModal({
                     {categoryList.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Device Model Dropdown + Quick Add */}
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-medium">Gerätemodell</label>
-                    <button
-                      type="button"
-                      onClick={() => setShowQuickModelModal(true)}
-                      className="text-[11px] text-accent hover:underline flex items-center gap-0.5"
-                    >
-                      <Plus className="w-3 h-3" /> Neu
-                    </button>
-                  </div>
-                  <select
-                    value={newPart.deviceModelId}
-                    onChange={(e) => setNewPart({ ...newPart, deviceModelId: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg bg-background text-sm"
-                  >
-                    <option value="">-- Keines / Universell --</option>
-                    {deviceModelList.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.brand} {m.modelName}
                       </option>
                     ))}
                   </select>
@@ -505,6 +564,16 @@ export function StockInModal({
         </form>
       </div>
 
+      {/* Shared Quick-Add Brand Modal */}
+      <QuickAddBrandModal
+        isOpen={showQuickBrandModal}
+        onClose={() => setShowQuickBrandModal(false)}
+        onSuccess={(created) => {
+          setBrandList((prev) => [...prev, { id: created.id, name: created.name }]);
+          setSelectedBrandId(created.id);
+        }}
+      />
+
       {/* Quick Add Category Mini Modal */}
       {showQuickCategoryModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -552,17 +621,6 @@ export function StockInModal({
             <div className="flex items-center gap-2 border-b pb-3">
               <Smartphone className="w-4 h-4 text-accent" />
               <h3 className="font-bold text-sm">Neues Gerätemodell erstellen</h3>
-            </div>
-            <div>
-              <label className="text-xs font-medium block mb-1">Marke</label>
-              <input
-                type="text"
-                required
-                value={newModelBrand}
-                onChange={(e) => setNewModelBrand(e.target.value)}
-                placeholder="Apple, Samsung, Google..."
-                className="w-full px-3 py-2 border rounded-lg text-sm"
-              />
             </div>
             <div>
               <label className="text-xs font-medium block mb-1">Modellname</label>

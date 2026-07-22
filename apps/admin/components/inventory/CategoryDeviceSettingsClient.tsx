@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { Tag, Smartphone, Plus, Trash2, Edit2, AlertCircle, Check, ShieldAlert } from "lucide-react";
+import { Tag, Smartphone, Plus, Trash2, Edit2, Check, ShieldAlert, Layers } from "lucide-react";
 import {
+  createBrand,
+  deleteBrand,
   createCategory,
   updateCategory,
   deleteCategory,
@@ -10,45 +12,102 @@ import {
   deleteDeviceModel,
 } from "../../app/actions/inventory";
 import { useRouter } from "next/navigation";
+import { QuickAddBrandModal } from "./QuickAddBrandModal";
 
-interface Category {
+interface BrandItem {
+  id: string;
+  name: string;
+  modelsCount: number;
+}
+
+interface CategoryItem {
   id: string;
   name: string;
   partsCount: number;
 }
 
-interface DeviceModel {
+interface DeviceModelItem {
   id: string;
   brand: string;
+  brandId?: string | null;
   modelName: string;
   partsCount: number;
 }
 
 interface CategoryDeviceSettingsClientProps {
-  initialCategories: Category[];
-  initialDeviceModels: DeviceModel[];
+  initialBrands: BrandItem[];
+  initialCategories: CategoryItem[];
+  initialDeviceModels: DeviceModelItem[];
 }
 
 export function CategoryDeviceSettingsClient({
+  initialBrands,
   initialCategories,
   initialDeviceModels,
 }: CategoryDeviceSettingsClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [activeTab, setActiveTab] = useState<"categories" | "models">("categories");
+  const [activeTab, setActiveTab] = useState<"brands" | "categories" | "models">("brands");
+
+  // Dynamic state for Brands
+  const [brandList, setBrandList] = useState<BrandItem[]>(initialBrands);
+  const [newBrandName, setNewBrandName] = useState("");
 
   // Category Add State
   const [newCategoryName, setNewCategoryName] = useState("");
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editCategoryName, setEditCategoryName] = useState("");
 
-  // Device Model Add State
-  const [newModelBrand, setNewModelBrand] = useState("Apple");
+  // Device Model Add State (Using Brand Dropdown, NO free text string!)
+  const [selectedBrandIdForModel, setSelectedBrandIdForModel] = useState<string>(
+    initialBrands[0]?.id || ""
+  );
   const [newModelName, setNewModelName] = useState("");
+
+  // Inline Quick Add Brand Modal State
+  const [showQuickBrandModal, setShowQuickBrandModal] = useState(false);
 
   // Error / Warning Dialog State
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
+
+  // --- Brand Handlers ---
+  const handleCreateBrand = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBrandName.trim()) return;
+
+    startTransition(async () => {
+      const res = await createBrand(newBrandName.trim());
+      if (res.success && res.brand) {
+        setNewBrandName("");
+        setBrandList((prev) => [...prev, { id: res.brand.id, name: res.brand.name, modelsCount: 0 }]);
+        router.refresh();
+      } else {
+        alert(res.error || "Fehler beim Erstellen der Marke.");
+      }
+    });
+  };
+
+  const handleDeleteBrand = (brand: BrandItem) => {
+    if (brand.modelsCount > 0) {
+      setWarningMessage(
+        `Marke "${brand.name}" kann nicht gelöscht werden, da sie noch von ${brand.modelsCount} Gerätemodell(en) verwendet wird.`
+      );
+      return;
+    }
+
+    if (confirm(`Möchten Sie die Marke "${brand.name}" wirklich löschen?`)) {
+      startTransition(async () => {
+        const res = await deleteBrand(brand.id);
+        if (res.success) {
+          setBrandList((prev) => prev.filter((b) => b.id !== brand.id));
+          router.refresh();
+        } else {
+          setWarningMessage(res.error || "Fehler beim Löschen der Marke.");
+        }
+      });
+    }
+  };
 
   // --- Category Handlers ---
   const handleCreateCategory = (e: React.FormEvent) => {
@@ -66,7 +125,7 @@ export function CategoryDeviceSettingsClient({
     });
   };
 
-  const handleStartEditCategory = (cat: Category) => {
+  const handleStartEditCategory = (cat: CategoryItem) => {
     setEditingCategoryId(cat.id);
     setEditCategoryName(cat.name);
   };
@@ -85,7 +144,7 @@ export function CategoryDeviceSettingsClient({
     });
   };
 
-  const handleDeleteCategory = (cat: Category) => {
+  const handleDeleteCategory = (cat: CategoryItem) => {
     if (cat.partsCount > 0) {
       setWarningMessage(
         `Kategorie "${cat.name}" kann nicht gelöscht werden, da sie noch von ${cat.partsCount} Teil(en) im Lager verwendet wird.`
@@ -108,10 +167,13 @@ export function CategoryDeviceSettingsClient({
   // --- Device Model Handlers ---
   const handleCreateDeviceModel = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newModelBrand.trim() || !newModelName.trim()) return;
+    if (!selectedBrandIdForModel || !newModelName.trim()) return;
+
+    const brandObj = brandList.find((b) => b.id === selectedBrandIdForModel);
+    const brandName = brandObj ? brandObj.name : "";
 
     startTransition(async () => {
-      const res = await createDeviceModel(newModelBrand.trim(), newModelName.trim());
+      const res = await createDeviceModel(brandName, newModelName.trim(), selectedBrandIdForModel);
       if (res.success) {
         setNewModelName("");
         router.refresh();
@@ -121,7 +183,7 @@ export function CategoryDeviceSettingsClient({
     });
   };
 
-  const handleDeleteDeviceModel = (model: DeviceModel) => {
+  const handleDeleteDeviceModel = (model: DeviceModelItem) => {
     if (model.partsCount > 0) {
       setWarningMessage(
         `Gerätemodell "${model.brand} ${model.modelName}" kann nicht gelöscht werden, da es noch von ${model.partsCount} Teil(en) im Lager verwendet wird.`
@@ -143,11 +205,11 @@ export function CategoryDeviceSettingsClient({
 
   // Group models by brand
   const groupedModels = initialDeviceModels.reduce((acc, m) => {
-    const brand = m.brand || "Andere";
+    const brand = m.brand || "Andere / Ohne Marke";
     if (!acc[brand]) acc[brand] = [];
     acc[brand].push(m);
     return acc;
-  }, {} as Record<string, DeviceModel[]>);
+  }, {} as Record<string, DeviceModelItem[]>);
 
   return (
     <div className="space-y-6">
@@ -155,12 +217,23 @@ export function CategoryDeviceSettingsClient({
       <div>
         <h2 className="text-xl font-bold tracking-tight">Inventar-Einstellungen</h2>
         <p className="text-xs text-muted-foreground">
-          Dynamische Kategorien und Gerätemodelle für Ersatzteile verwalten.
+          Dynamische Marken, Gerätemodelle und Kategorien verwalten.
         </p>
       </div>
 
       {/* Sub Tabs */}
       <div className="flex border-b gap-4">
+        <button
+          onClick={() => setActiveTab("brands")}
+          className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all ${
+            activeTab === "brands"
+              ? "border-foreground text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Layers className="w-4 h-4" />
+          Marken ({brandList.length})
+        </button>
         <button
           onClick={() => setActiveTab("categories")}
           className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all ${
@@ -201,6 +274,76 @@ export function CategoryDeviceSettingsClient({
               >
                 Verstanden
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BRANDS TAB */}
+      {activeTab === "brands" && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Add Brand Form */}
+          <div className="bg-card border rounded-xl p-5 shadow-sm space-y-4 h-fit">
+            <h3 className="font-bold text-sm flex items-center gap-2">
+              <Plus className="w-4 h-4 text-accent" /> Neue Marke hinzufügen
+            </h3>
+            <form onSubmit={handleCreateBrand} className="space-y-3">
+              <div>
+                <label className="text-xs font-medium block mb-1">Markenname</label>
+                <input
+                  type="text"
+                  required
+                  value={newBrandName}
+                  onChange={(e) => setNewBrandName(e.target.value)}
+                  placeholder="z.B. Apple, Samsung, Google"
+                  className="w-full px-3 py-2 border rounded-lg text-sm bg-background"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isPending || !newBrandName.trim()}
+                className="w-full py-2 bg-foreground text-background rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {isPending ? "Speichern..." : "Marke hinzufügen"}
+              </button>
+            </form>
+          </div>
+
+          {/* Brands List */}
+          <div className="md:col-span-2 bg-card border rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b bg-muted/40 font-semibold text-xs text-muted-foreground flex justify-between">
+              <span>Marke</span>
+              <span>Gerätemodelle</span>
+            </div>
+            <div className="divide-y divide-border">
+              {brandList.length === 0 ? (
+                <div className="p-6 text-center text-xs text-muted-foreground">Keine Marken vorhanden.</div>
+              ) : (
+                brandList.map((b) => (
+                  <div key={b.id} className="p-3.5 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-2 font-medium text-sm">
+                      <Layers className="w-3.5 h-3.5 text-muted-foreground" />
+                      {b.name}
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <span className="px-2 py-0.5 rounded-full bg-muted text-xs font-mono font-medium text-muted-foreground border">
+                        {b.modelsCount} Modelle
+                      </span>
+                      <button
+                        onClick={() => handleDeleteBrand(b)}
+                        className={`p-1 rounded ${
+                          b.modelsCount > 0
+                            ? "text-muted-foreground/50 hover:text-amber-500"
+                            : "text-muted-foreground hover:text-red-500"
+                        }`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -304,23 +447,37 @@ export function CategoryDeviceSettingsClient({
       {/* DEVICE MODELS TAB */}
       {activeTab === "models" && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Add Device Model Form */}
+          {/* Add Device Model Form using Brand Dropdown + Quick Add */}
           <div className="bg-card border rounded-xl p-5 shadow-sm space-y-4 h-fit">
             <h3 className="font-bold text-sm flex items-center gap-2">
               <Plus className="w-4 h-4 text-accent" /> Neues Gerätemodell hinzufügen
             </h3>
             <form onSubmit={handleCreateDeviceModel} className="space-y-3">
               <div>
-                <label className="text-xs font-medium block mb-1">Marke</label>
-                <input
-                  type="text"
-                  required
-                  value={newModelBrand}
-                  onChange={(e) => setNewModelBrand(e.target.value)}
-                  placeholder="z.B. Apple, Samsung"
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs font-medium">Marke wählen</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickBrandModal(true)}
+                    className="text-[11px] text-accent hover:underline flex items-center gap-0.5"
+                  >
+                    <Plus className="w-3 h-3" /> Neue Marke
+                  </button>
+                </div>
+                <select
+                  value={selectedBrandIdForModel}
+                  onChange={(e) => setSelectedBrandIdForModel(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg text-sm bg-background"
-                />
+                >
+                  <option value="" disabled>-- Bitte Marke wählen --</option>
+                  {brandList.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
               </div>
+
               <div>
                 <label className="text-xs font-medium block mb-1">Modellname</label>
                 <input
@@ -328,13 +485,14 @@ export function CategoryDeviceSettingsClient({
                   required
                   value={newModelName}
                   onChange={(e) => setNewModelName(e.target.value)}
-                  placeholder="z.B. iPhone 16 Pro Max"
+                  placeholder="z.B. iPhone 16 Pro Max, Galaxy S24"
                   className="w-full px-3 py-2 border rounded-lg text-sm bg-background"
                 />
               </div>
+
               <button
                 type="submit"
-                disabled={isPending || !newModelBrand.trim() || !newModelName.trim()}
+                disabled={isPending || !selectedBrandIdForModel || !newModelName.trim()}
                 className="w-full py-2 bg-foreground text-background rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 {isPending ? "Speichern..." : "Modell hinzufügen"}
@@ -385,6 +543,16 @@ export function CategoryDeviceSettingsClient({
           </div>
         </div>
       )}
+
+      {/* Shared Quick-Add Brand Modal */}
+      <QuickAddBrandModal
+        isOpen={showQuickBrandModal}
+        onClose={() => setShowQuickBrandModal(false)}
+        onSuccess={(created) => {
+          setBrandList((prev) => [...prev, { id: created.id, name: created.name, modelsCount: 0 }]);
+          setSelectedBrandIdForModel(created.id);
+        }}
+      />
     </div>
   );
 }
