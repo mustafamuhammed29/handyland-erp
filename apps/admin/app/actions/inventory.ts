@@ -3,6 +3,8 @@
 import { prisma } from "@repo/database";
 import { revalidatePath as originalRevalidatePath } from "next/cache";
 
+const db = prisma as any;
+
 function revalidatePath(path: string) {
   try {
     originalRevalidatePath(path);
@@ -15,7 +17,7 @@ function revalidatePath(path: string) {
 
 export async function getCategories() {
   try {
-    const categories = await prisma.category.findMany({
+    const categories = await db.category.findMany({
       orderBy: { name: "asc" },
       include: {
         _count: {
@@ -25,7 +27,7 @@ export async function getCategories() {
     });
     return {
       success: true,
-      categories: categories.map((c) => ({
+      categories: categories.map((c: any) => ({
         id: c.id,
         name: c.name,
         partsCount: c._count.parts,
@@ -43,14 +45,14 @@ export async function createCategory(name: string) {
     const trimmed = name.trim();
     if (!trimmed) return { success: false, error: "Name ist erforderlich." };
 
-    const existing = await prisma.category.findFirst({
+    const existing = await db.category.findFirst({
       where: { name: { equals: trimmed, mode: "insensitive" } },
     });
     if (existing) {
       return { success: false, error: `Kategorie "${existing.name}" existiert bereits.`, category: existing };
     }
 
-    const category = await prisma.category.create({
+    const category = await db.category.create({
       data: { name: trimmed },
     });
     revalidatePath("/inventory");
@@ -67,7 +69,7 @@ export async function updateCategory(id: string, name: string) {
     const trimmed = name.trim();
     if (!trimmed) return { success: false, error: "Name ist erforderlich." };
 
-    const existing = await prisma.category.findFirst({
+    const existing = await db.category.findFirst({
       where: {
         id: { not: id },
         name: { equals: trimmed, mode: "insensitive" },
@@ -77,13 +79,13 @@ export async function updateCategory(id: string, name: string) {
       return { success: false, error: `Eine andere Kategorie mit dem Namen "${existing.name}" existiert bereits.` };
     }
 
-    const category = await prisma.category.update({
+    const category = await db.category.update({
       where: { id },
       data: { name: trimmed },
     });
 
     // Sync string field on parts
-    await prisma.part.updateMany({
+    await db.part.updateMany({
       where: { categoryId: id },
       data: { category: trimmed },
     });
@@ -99,7 +101,7 @@ export async function updateCategory(id: string, name: string) {
 
 export async function deleteCategory(id: string) {
   try {
-    const partsCount = await prisma.part.count({ where: { categoryId: id } });
+    const partsCount = await db.part.count({ where: { categoryId: id } });
     if (partsCount > 0) {
       return {
         success: false,
@@ -107,7 +109,7 @@ export async function deleteCategory(id: string) {
       };
     }
 
-    await prisma.category.delete({ where: { id } });
+    await db.category.delete({ where: { id } });
     revalidatePath("/inventory");
     revalidatePath("/inventory/settings");
     return { success: true };
@@ -121,7 +123,7 @@ export async function deleteCategory(id: string) {
 
 export async function getDeviceModels() {
   try {
-    const deviceModels = await prisma.deviceModel.findMany({
+    const deviceModels = await db.deviceModel.findMany({
       orderBy: [{ brand: "asc" }, { modelName: "asc" }],
       include: {
         _count: {
@@ -131,7 +133,7 @@ export async function getDeviceModels() {
     });
     return {
       success: true,
-      deviceModels: deviceModels.map((m) => ({
+      deviceModels: deviceModels.map((m: any) => ({
         id: m.id,
         brand: m.brand,
         modelName: m.modelName,
@@ -154,7 +156,7 @@ export async function createDeviceModel(brand: string, modelName: string) {
       return { success: false, error: "Marke und Modellname sind erforderlich." };
     }
 
-    const existing = await prisma.deviceModel.findFirst({
+    const existing = await db.deviceModel.findFirst({
       where: {
         brand: { equals: trimmedBrand, mode: "insensitive" },
         modelName: { equals: trimmedModel, mode: "insensitive" },
@@ -168,7 +170,7 @@ export async function createDeviceModel(brand: string, modelName: string) {
       };
     }
 
-    const deviceModel = await prisma.deviceModel.create({
+    const deviceModel = await db.deviceModel.create({
       data: { brand: trimmedBrand, modelName: trimmedModel },
     });
     revalidatePath("/inventory");
@@ -182,7 +184,7 @@ export async function createDeviceModel(brand: string, modelName: string) {
 
 export async function deleteDeviceModel(id: string) {
   try {
-    const partsCount = await prisma.part.count({ where: { deviceModelId: id } });
+    const partsCount = await db.part.count({ where: { deviceModelId: id } });
     if (partsCount > 0) {
       return {
         success: false,
@@ -190,7 +192,7 @@ export async function deleteDeviceModel(id: string) {
       };
     }
 
-    await prisma.deviceModel.delete({ where: { id } });
+    await db.deviceModel.delete({ where: { id } });
     revalidatePath("/inventory");
     revalidatePath("/inventory/settings");
     return { success: true };
@@ -206,21 +208,21 @@ export async function createPart(data: any) {
   try {
     let categoryName = data.category || null;
     if (data.categoryId) {
-      const cat = await prisma.category.findUnique({ where: { id: data.categoryId } });
+      const cat = await db.category.findUnique({ where: { id: data.categoryId } });
       if (cat) categoryName = cat.name;
     }
 
     let brandStr = data.brand || null;
     let deviceModelStr = data.deviceModel || null;
     if (data.deviceModelId) {
-      const dm = await prisma.deviceModel.findUnique({ where: { id: data.deviceModelId } });
+      const dm = await db.deviceModel.findUnique({ where: { id: data.deviceModelId } });
       if (dm) {
         brandStr = dm.brand;
         deviceModelStr = dm.modelName;
       }
     }
 
-    const part = await prisma.part.create({
+    const part = await db.part.create({
       data: {
         name: data.name,
         categoryId: data.categoryId || null,
@@ -251,21 +253,21 @@ export async function updatePart(id: string, data: any) {
   try {
     let categoryName = data.category || null;
     if (data.categoryId) {
-      const cat = await prisma.category.findUnique({ where: { id: data.categoryId } });
+      const cat = await db.category.findUnique({ where: { id: data.categoryId } });
       if (cat) categoryName = cat.name;
     }
 
     let brandStr = data.brand || null;
     let deviceModelStr = data.deviceModel || null;
     if (data.deviceModelId) {
-      const dm = await prisma.deviceModel.findUnique({ where: { id: data.deviceModelId } });
+      const dm = await db.deviceModel.findUnique({ where: { id: data.deviceModelId } });
       if (dm) {
         brandStr = dm.brand;
         deviceModelStr = dm.modelName;
       }
     }
 
-    const part = await prisma.part.update({
+    const part = await db.part.update({
       where: { id },
       data: {
         name: data.name,
@@ -321,7 +323,7 @@ export async function addStockIn(data: {
       return { success: false, error: "Die Menge muss größer als 0 sein." };
     }
 
-    return await prisma.$transaction(async (tx) => {
+    return await db.$transaction(async (tx: any) => {
       let finalSupplierId = data.supplierId || null;
 
       // Handle free-text supplier name if no supplierId
@@ -430,7 +432,7 @@ export async function addStockIn(data: {
 
 export async function deleteParts(ids: string[]) {
   try {
-    await prisma.part.deleteMany({
+    await db.part.deleteMany({
       where: { id: { in: ids } },
     });
     revalidatePath("/inventory");
@@ -443,7 +445,7 @@ export async function deleteParts(ids: string[]) {
 
 export async function updateStock(id: string, amount: number, staffId?: string, notes?: string) {
   try {
-    return await prisma.$transaction(async (tx) => {
+    return await db.$transaction(async (tx: any) => {
       const part = await tx.part.findUnique({ where: { id } });
       if (!part) throw new Error("Part not found");
 
@@ -478,7 +480,7 @@ export async function updateStock(id: string, amount: number, staffId?: string, 
 
 export async function processDirectSale(items: { partId: string; quantity: number; price: number }[], staffId?: string) {
   try {
-    await prisma.$transaction(async (tx) => {
+    await db.$transaction(async (tx: any) => {
       for (const item of items) {
         const part = await tx.part.findUnique({ where: { id: item.partId } });
         if (!part) throw new Error(`Part ${item.partId} not found`);
